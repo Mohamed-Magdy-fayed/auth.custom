@@ -1,42 +1,43 @@
-import { NextResponse, type NextRequest } from "next/server"
-import {
-  getSessionFromCookie,
-  refreshSession,
-} from "./auth/core/session"
+import { type NextRequest, NextResponse } from "next/server"
 
-const privateRoutes = ["/private"]
-const adminRoutes = ["/admin"]
+import { SESSION_COOKIE_KEY } from "./auth/core/constants"
 
-export async function middleware(request: NextRequest) {
-  const response = (await middlewareAuth(request)) ?? NextResponse.next()
+const redirectWhenAuthenticatedPrefixes = [
+  "/sign-in",
+  "/sign-up",
+  "/forgot-password",
+  "/reset-password",
+]
 
-  await refreshSession({
-    set: (key, value, options) => {
-      response.cookies.set({ ...options, name: key, value })
-    },
-    get: key => request.cookies.get(key),
-  })
+const protectedRoutePrefixes = ["/admin"]
+const protectedExactRoutes = new Set(["/"])
 
-  return response
+function matchesRoute(pathname: string, prefixes: string[]) {
+  return prefixes.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
-async function middlewareAuth(request: NextRequest) {
-  if (privateRoutes.includes(request.nextUrl.pathname)) {
-    const user = await getSessionFromCookie(request.cookies)
-    if (user == null) {
-      return NextResponse.redirect(new URL("/sign-in", request.url))
-    }
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  const redirectAuthenticated = matchesRoute(pathname, redirectWhenAuthenticatedPrefixes)
+  const isProtectedPrefix = matchesRoute(pathname, protectedRoutePrefixes)
+  const isProtectedRoute = isProtectedPrefix || protectedExactRoutes.has(pathname)
+  const hasSessionCookie = request.cookies.has(SESSION_COOKIE_KEY)
+
+  if (redirectAuthenticated && hasSessionCookie) {
+    const redirectToHome = new URL("/", request.url)
+    return NextResponse.redirect(redirectToHome)
   }
 
-  if (adminRoutes.includes(request.nextUrl.pathname)) {
-    const user = await getSessionFromCookie(request.cookies)
-    if (user == null) {
-      return NextResponse.redirect(new URL("/sign-in", request.url))
-    }
-    if (user.role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url))
-    }
+  if (!hasSessionCookie && isProtectedRoute) {
+    const signInUrl = request.nextUrl.clone()
+    signInUrl.pathname = "/sign-in"
+    signInUrl.searchParams.set("redirect", pathname)
+    return NextResponse.redirect(signInUrl)
   }
+
+  // Admin role verification happens during page rendering to avoid DB access in edge runtime.
+  return NextResponse.next()
 }
 
 export const config = {

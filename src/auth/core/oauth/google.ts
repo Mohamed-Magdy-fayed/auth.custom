@@ -1,6 +1,6 @@
+import { z } from "zod";
 import { env } from "@/data/env/server";
 import { OAuthClient } from "./base";
-import { z } from "zod";
 
 export function createGoogleOAuthClient() {
   return new OAuthClient({
@@ -17,16 +17,11 @@ export function createGoogleOAuthClient() {
       schema: z.object({
         sub: z.string(),
         name: z.string(),
-        email: z.string().email(),
-        picture: z.string().url().optional(),
+        email: z.email(),
+        picture: z.url().optional(),
       }),
 
-      parser: (user) => ({
-        id: user.sub,
-        name: user.name,
-        email: user.email,
-
-      }),
+      parser: (user) => ({ id: user.sub, name: user.name, email: user.email }),
     },
   });
 }

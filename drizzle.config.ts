@@ -1,17 +1,13 @@
-import { env } from "@/data/env/server"
-import { defineConfig } from "drizzle-kit"
+import type { Config } from "drizzle-kit";
+import { env } from "@/data/env/server";
 
-export default defineConfig({
-  out: "./src/drizzle/migrations",
+export default {
   schema: "./src/drizzle/schema.ts",
+  out: "./src/drizzle/migrations",
   dialect: "postgresql",
-  strict: true,
-  verbose: true,
-  dbCredentials: {
-    password: env.DB_PASSWORD!,
-    user: env.DB_USER!,
-    database: env.DB_NAME!,
-    host: env.DB_HOST!,
-    ssl: false,
+  dbCredentials: { url: env.DATABASE_URL },
+  migrations: {
+    schema: "public",
+    table: "drizzle_migrations",
   },
-})
+} satisfies Config;

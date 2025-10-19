@@ -1,5 +1,6 @@
 "use client"
 
+import { authMessage } from "@/auth/config"
 import {
   Form,
   FormControl,
@@ -16,10 +17,23 @@ import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { signUpSchema } from "../schemas"
 import Link from "next/link"
+import { zodResolver } from "@hookform/resolvers/zod"
+import type { OAuthProvider } from "@/auth/tables"
 
-export function SignUpForm() {
+type OAuthOption = {
+  provider: OAuthProvider
+  label: string
+}
+
+type SignUpFormProps = {
+  providers: OAuthOption[]
+}
+
+export function SignUpForm({ providers }: SignUpFormProps) {
   const [error, setError] = useState<string>()
+  const [oauthError, setOauthError] = useState<string>()
   const form = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -32,24 +46,43 @@ export function SignUpForm() {
     setError(error)
   }
 
+  async function handleOAuthClick(provider: OAuthProvider) {
+    setOauthError(undefined)
+    const result = await oAuthSignIn(provider)
+    if (result && "error" in result && result.error) {
+      setOauthError(result.error)
+    }
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {error && <p className="text-destructive">{error}</p>}
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            onClick={async () => await oAuthSignIn("google")}
-          >
-            Google
-          </Button>
-        </div>
+        {oauthError && <p className="text-destructive">{oauthError}</p>}
+        {providers.length > 0 && (
+          <div className="flex flex-wrap gap-3">
+            {providers.map(option => (
+              <Button
+                key={option.provider}
+                type="button"
+                onClick={async () => await handleOAuthClick(option.provider)}
+              >
+                {authMessage("auth.oauth.providerButton", option.label, {
+                  provider: option.label,
+                  providerKey: option.provider,
+                })}
+              </Button>
+            ))}
+          </div>
+        )}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>
+                {authMessage("auth.signUp.nameLabel", "Name")}
+              </FormLabel>
               <FormControl>
                 <Input type="text" {...field} />
               </FormControl>
@@ -62,7 +95,9 @@ export function SignUpForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>
+                {authMessage("auth.signUp.emailLabel", "Email")}
+              </FormLabel>
               <FormControl>
                 <Input type="email" {...field} />
               </FormControl>
@@ -75,7 +110,9 @@ export function SignUpForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>
+                {authMessage("auth.signUp.passwordLabel", "Password")}
+              </FormLabel>
               <FormControl>
                 <Input type="password" {...field} />
               </FormControl>
@@ -85,9 +122,13 @@ export function SignUpForm() {
         />
         <div className="flex gap-4 justify-end">
           <Button asChild variant="link">
-            <Link href="/sign-in">Sign In</Link>
+            <Link href="/sign-in">
+              {authMessage("auth.signUp.toSignIn", "Sign In")}
+            </Link>
           </Button>
-          <Button type="submit">Sign Up</Button>
+          <Button type="submit">
+            {authMessage("auth.signUp.submit", "Sign Up")}
+          </Button>
         </div>
       </form>
     </Form>

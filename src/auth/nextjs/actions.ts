@@ -1,87 +1,216 @@
-"use server"
+"use server";
 
-import { z } from "zod"
-import { redirect } from "next/navigation"
-import { signInSchema, signUpSchema } from "./schemas"
-import { db } from "@/drizzle/db"
-import { OAuthProvider, UsersTable } from "@/drizzle/schema"
-import { eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { authMessage } from "@/auth/config";
+import {
+  OAuthProvider,
+  oAuthProviderValues,
+  RolesTable,
+  UserCredentialsTable,
+  UserRoleAssignmentsTable,
+  UsersTable,
+} from "@/auth/tables";
+import { db } from "@/drizzle/db";
+import { DEFAULT_ROLE_KEY } from "../core/constants";
+import { getOAuthClient } from "../core/oauth/base";
+import {
+  isOAuthProviderConfigured,
+  providerDisplayNames,
+} from "../core/oauth/providers";
 import {
   comparePasswords,
   generateSalt,
   hashPassword,
-} from "../core/passwordHasher"
-import { cookies } from "next/headers"
-import { createSession, removeSession } from "../core/session"
-import { getOAuthClient } from "../core/oauth/base"
+} from "../core/passwordHasher";
+import { createSession, removeSession } from "../core/session";
+import { signInSchema, signUpSchema } from "./schemas";
+import { getSessionContext } from "./sessionContext";
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
 
 export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
-  const { success, data } = signInSchema.safeParse(unsafeData)
+  const { success, data } = signInSchema.safeParse(unsafeData);
 
-  if (!success) return "Unable to log you in"
+  if (!success)
+    return authMessage("auth.signIn.error.generic", "Unable to log you in");
+
+  const normalizedEmail = normalizeEmail(data.email);
 
   const user = await db.query.UsersTable.findFirst({
-    columns: { password: true, salt: true, id: true, email: true, role: true },
-    where: eq(UsersTable.email, data.email),
-  })
+    columns: { id: true, email: true, status: true },
+    where: eq(UsersTable.emailNormalized, normalizedEmail),
+    with: {
+      credentials: { columns: { passwordHash: true, passwordSalt: true } },
+      roleAssignments: { columns: {}, with: { role: { columns: { key: true } } } },
+    },
+  });
 
-  if (user == null || user.password == null || user.salt == null) {
-    return "Unable to log you in"
+  if (
+    user == null ||
+    user.credentials == null ||
+    user.credentials.passwordHash == null ||
+    user.credentials.passwordSalt == null
+  ) {
+    return authMessage("auth.signIn.error.generic", "Unable to log you in");
+  }
+
+  if (user.status !== "active") {
+    return authMessage("auth.signIn.error.inactive", "Account is not active");
   }
 
   const isCorrectPassword = await comparePasswords({
-    hashedPassword: user.password,
+    hashedPassword: user.credentials.passwordHash,
     password: data.password,
-    salt: user.salt,
-  })
+    salt: user.credentials.passwordSalt,
+  });
 
-  if (!isCorrectPassword) return "Unable to log you in"
+  if (!isCorrectPassword)
+    return authMessage("auth.signIn.error.generic", "Unable to log you in");
 
-  await createSession(user, await cookies())
+  const primaryRole =
+    user.roleAssignments?.find((assignment) => assignment.role != null)?.role
+      ?.key ?? DEFAULT_ROLE_KEY;
 
-  redirect("/")
+  await createSession(
+    { id: user.id, role: primaryRole },
+    await cookies(),
+    await getSessionContext(),
+  );
+
+  redirect("/");
 }
 
 export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
-  const { success, data } = signUpSchema.safeParse(unsafeData)
+  const result = signUpSchema.safeParse(unsafeData);
 
-  if (!success) return "Unable to create account"
-
-  const existingUser = await db.query.UsersTable.findFirst({
-    where: eq(UsersTable.email, data.email),
-  })
-
-  if (existingUser != null) return "Account already exists for this email"
-
-  try {
-    const salt = generateSalt()
-    const hashedPassword = await hashPassword(data.password, salt)
-
-    const [user] = await db
-      .insert(UsersTable)
-      .values({
-        name: data.name,
-        email: data.email,
-        password: hashedPassword,
-        salt,
-      })
-      .returning({ id: UsersTable.id, role: UsersTable.role })
-
-    if (user == null) return "Unable to create account"
-    await createSession(user, await cookies())
-  } catch {
-    return "Unable to create account"
+  if (!result.success) {
+    console.warn("signUp validation failed", result.error.flatten());
+    return (
+      result.error.issues[0]?.message ??
+      authMessage("auth.signUp.error.generic", "Unable to create account")
+    );
   }
 
-  redirect("/")
+  const data = result.data;
+  const normalizedEmail = normalizeEmail(data.email);
+
+  try {
+    const user = await db.transaction(async (trx) => {
+      const existingUser = await trx.query.UsersTable.findFirst({
+        columns: { id: true },
+        where: eq(UsersTable.emailNormalized, normalizedEmail),
+      });
+
+      if (existingUser != null) {
+        throw new Error(
+          authMessage(
+            "auth.signUp.error.duplicate",
+            "Account already exists for this email",
+          ),
+        );
+      }
+
+      const salt = generateSalt();
+      const passwordHash = await hashPassword(data.password, salt);
+
+      const [createdUser] = await trx
+        .insert(UsersTable)
+        .values({
+          displayName: data.name,
+          email: data.email,
+          emailNormalized: normalizedEmail,
+          status: "active",
+        })
+        .returning({ id: UsersTable.id });
+
+      if (createdUser == null) {
+        throw new Error("Failed to create user");
+      }
+
+      await trx
+        .insert(UserCredentialsTable)
+        .values({ userId: createdUser.id, passwordHash, passwordSalt: salt });
+
+      let defaultRole = await trx.query.RolesTable.findFirst({
+        columns: { id: true },
+        where: and(
+          eq(RolesTable.key, DEFAULT_ROLE_KEY),
+          isNull(RolesTable.organizationId),
+        ),
+      });
+
+      if (defaultRole == null) {
+        [defaultRole] = await trx
+          .insert(RolesTable)
+          .values({
+            key: DEFAULT_ROLE_KEY,
+            name: "User",
+            description: "Default system role",
+          })
+          .returning({ id: RolesTable.id });
+      }
+
+      if (defaultRole == null) {
+        throw new Error("Failed to ensure default role");
+      }
+
+      await trx
+        .insert(UserRoleAssignmentsTable)
+        .values({
+          userId: createdUser.id,
+          roleId: defaultRole.id,
+          assignedById: createdUser.id,
+        });
+
+      return { id: createdUser.id, role: DEFAULT_ROLE_KEY };
+    });
+
+    await createSession(user, await cookies(), await getSessionContext());
+  } catch (error: any) {
+    const duplicateMessage = authMessage(
+      "auth.signUp.error.duplicate",
+      "Account already exists for this email",
+    );
+
+    if (error?.message === duplicateMessage) {
+      return duplicateMessage;
+    }
+
+    console.error(error);
+    return authMessage("auth.signUp.error.generic", "Unable to create account");
+  }
+
+  redirect("/");
 }
 
 export async function logOut() {
-  removeSession(await cookies())
-  redirect("/")
+  const cookie = await cookies();
+  await removeSession({
+    delete: (val) => cookie.delete(val),
+    get: (val) => cookie.get(val),
+  });
+  redirect("/");
 }
 
 export async function oAuthSignIn(provider: OAuthProvider) {
-  const oAuthClient = getOAuthClient(provider)
-  redirect(oAuthClient.createAuthUrl(await cookies()))
+  if (!oAuthProviderValues.includes(provider)) {
+    throw new Error("Unsupported OAuth provider");
+  }
+
+  if (!isOAuthProviderConfigured(provider)) {
+    return {
+      error: authMessage(
+        "auth.oauth.providerUnavailable",
+        `${providerDisplayNames[provider]} sign-in is not currently available.`,
+      ),
+    };
+  }
+
+  const oAuthClient = getOAuthClient(provider);
+  redirect(oAuthClient.createAuthUrl(await cookies()));
 }

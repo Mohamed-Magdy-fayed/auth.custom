@@ -1,0 +1,20 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+    "formatter": {
+        "enabled": true,
+        "expand": "never",
+        "indentStyle": "tab",
+        "indentWidth": 1
+    },
+    "linter": {
+        "enabled": false
+    },
+    "assist": {
+        "enabled": true,
+        "actions": {
+            "source": {
+                "organizeImports": "on"
+            }
+        }
+    }
+}
