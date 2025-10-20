@@ -1,3 +1,3 @@
 export function createAppleOAuthClient(): never {
-    throw new Error("Apple Sign In is not implemented yet")
+	throw new Error("Apple Sign In is not implemented yet");
 }

@@ -1,0 +1,7 @@
+.next
+.next/**
+next-js-saas-starter
+next-js-saas-starter/**
+src/drizzle/migrations/meta
+src/drizzle/migrations/meta/**
+**/drizzle/migrations/meta/**

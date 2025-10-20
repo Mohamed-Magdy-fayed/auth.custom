@@ -279,10 +279,17 @@ export async function beginPasskeyRegistration(): Promise<RegistrationOptionsRes
 		where: eq(BiometricCredentialsTable.userId, user.id),
 	});
 
+	const encodedUserId = textEncoder.encode(user.id);
+	const userIdBytes = new Uint8Array(
+		encodedUserId.buffer,
+		encodedUserId.byteOffset,
+		encodedUserId.byteLength,
+	) as Uint8Array<ArrayBuffer>;
+
 	const options = await generateRegistrationOptions({
 		rpName: RP_NAME,
 		rpID: rpId,
-		userID: textEncoder.encode(user.id),
+		userID: userIdBytes,
 		userName: user.email,
 		userDisplayName: user.name ?? user.email,
 		attestationType: "none",

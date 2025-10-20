@@ -1,35 +1,29 @@
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 
-import "./globals.css"
+import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-})
+	variable: "--font-geist-mono",
+	subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-  title: "Auth masterclass",
-  description: "A complete authentication system built with Next.js, Drizzle ORM, and PostgreSQL.",
-}
+	title: "auth.custom — Production-ready authentication starter",
+	description:
+		"Launch a polished SaaS authentication experience with multi-tenant orgs, billing, and docs out of the box.",
+};
 
 export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
-  return (
-    <html>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  )
+	children,
+}: Readonly<{ children: React.ReactNode }>) {
+	return (
+		<html>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+				{children}
+			</body>
+		</html>
+	);
 }

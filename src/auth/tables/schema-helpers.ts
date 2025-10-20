@@ -1,14 +1,14 @@
-import { timestamp, uuid } from "drizzle-orm/pg-core"
+import { timestamp, uuid } from "drizzle-orm/pg-core";
 
-export const id = uuid("id").primaryKey().defaultRandom()
+export const id = uuid("id").primaryKey().defaultRandom();
 
-export const userId = uuid("user_id").notNull()
+export const userId = uuid("user_id").notNull();
 
 export const createdAt = timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
+	.notNull()
+	.defaultNow();
 
 export const updatedAt = timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date())
+	.notNull()
+	.defaultNow()
+	.$onUpdate(() => new Date());

@@ -1,4 +1,4 @@
 export {
-    passwordResetRequestSchema,
-    passwordResetSubmissionSchema,
+	passwordResetRequestSchema,
+	passwordResetSubmissionSchema,
 } from "@/auth/features/password/server/schemas";

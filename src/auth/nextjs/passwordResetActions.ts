@@ -1,1 +1,4 @@
-export { requestPasswordReset, resetPassword } from "@/auth/features/password/server/actions";
+export {
+	requestPasswordReset,
+	resetPassword,
+} from "@/auth/features/password/server/actions";

@@ -15,6 +15,13 @@
       "when": 1760781266114,
       "tag": "0001_skinny_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760892219521,
+      "tag": "0002_lying_korath",
+      "breakpoints": true
     }
   ]
 }
