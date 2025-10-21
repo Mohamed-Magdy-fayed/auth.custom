@@ -8,13 +8,18 @@ import { getOAuthClient } from "@/auth/core/oauth/base";
 import { createSession, getSessionFromCookie } from "@/auth/core/session";
 import {
 	OAuthProvider,
+	OrganizationMembershipsTable,
+	OrganizationsTable,
 	oAuthProviderValues,
 	RolesTable,
+	TeamMembershipsTable,
+	TeamsTable,
 	UserOAuthAccountsTable,
 	UserRoleAssignmentsTable,
 	UsersTable,
 } from "@/auth/tables";
 import { db } from "@/drizzle/db";
+import { slugify } from "@/lib/utils";
 
 export async function GET(
 	request: NextRequest,
@@ -76,7 +81,9 @@ export async function GET(
 	redirect("/app");
 }
 
-async function ensureDefaultRole(trx: any, key: string) {
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function ensureDefaultRole(trx: DbTransaction, key: string) {
 	let defaultRole = await trx.query.RolesTable.findFirst({
 		columns: { id: true, key: true },
 		where: and(eq(RolesTable.key, key), isNull(RolesTable.organizationId)),
@@ -109,9 +116,9 @@ function connectUserToAccount(
 ) {
 	return db.transaction(async (trx) => {
 		const normalizedEmail = normalizeEmail(email);
-		let user = options.currentUserId
+		const existingUser = options.currentUserId
 			? await trx.query.UsersTable.findFirst({
-				columns: { id: true },
+				columns: { id: true, emailVerifiedAt: true },
 				where: eq(UsersTable.id, options.currentUserId),
 				with: {
 					roleAssignments: {
@@ -121,7 +128,7 @@ function connectUserToAccount(
 				},
 			})
 			: await trx.query.UsersTable.findFirst({
-				columns: { id: true },
+				columns: { id: true, emailVerifiedAt: true },
 				where: eq(UsersTable.emailNormalized, normalizedEmail),
 				with: {
 					roleAssignments: {
@@ -131,6 +138,8 @@ function connectUserToAccount(
 				},
 			});
 
+		let user = existingUser;
+
 		if (user == null) {
 			const [newUser] = await trx
 				.insert(UsersTable)
@@ -139,8 +148,12 @@ function connectUserToAccount(
 					emailNormalized: normalizedEmail,
 					displayName: name,
 					status: "active",
+					emailVerifiedAt: new Date(),
 				})
-				.returning({ id: UsersTable.id });
+				.returning({
+					id: UsersTable.id,
+					emailVerifiedAt: UsersTable.emailVerifiedAt,
+				});
 
 			if (newUser == null) {
 				throw new Error("Unable to create user from OAuth profile");
@@ -156,6 +169,8 @@ function connectUserToAccount(
 					assignedById: newUser.id,
 				});
 
+			await ensureDefaultOrganization(trx, { userId: newUser.id, name });
+
 			user = { ...newUser, roleAssignments: [{ role: { key: defaultRole.key } }] };
 		} else {
 			const existingAccount = await trx.query.UserOAuthAccountsTable.findFirst({
@@ -168,6 +183,13 @@ function connectUserToAccount(
 
 			if (existingAccount && existingAccount.userId !== user.id) {
 				throw new Error("This OAuth account is already linked to another user");
+			}
+
+			if (user.emailVerifiedAt == null) {
+				await trx
+					.update(UsersTable)
+					.set({ emailVerifiedAt: new Date() })
+					.where(eq(UsersTable.id, user.id));
 			}
 		}
 
@@ -182,4 +204,113 @@ function connectUserToAccount(
 
 		return { id: user.id, role: roleKey };
 	});
+}
+
+async function ensureDefaultOrganization(
+	trx: DbTransaction,
+	{ userId, name }: { userId: string; name: string },
+) {
+	const existingMembership =
+		await trx.query.OrganizationMembershipsTable.findFirst({
+			columns: { userId: true },
+			where: eq(OrganizationMembershipsTable.userId, userId),
+		});
+
+	if (existingMembership) return;
+
+	const organizationLabel = `${name || "New user"}'s Organization`;
+	const organizationSlug = await generateUniqueOrganizationSlug(
+		trx,
+		organizationLabel,
+	);
+
+	const [organization] = await trx
+		.insert(OrganizationsTable)
+		.values({
+			name: organizationLabel,
+			slug: organizationSlug,
+			description: null,
+			createdById: userId,
+		})
+		.returning();
+
+	if (!organization) {
+		throw new Error("Failed to create organization for OAuth signup");
+	}
+
+	const teamLabel = `${name || "New user"}'s Team`;
+	const teamSlug = await generateUniqueTeamSlug(trx, teamLabel);
+
+	const [team] = await trx
+		.insert(TeamsTable)
+		.values({
+			organizationId: organization.id,
+			name: teamLabel,
+			slug: teamSlug,
+			description: null,
+		})
+		.returning();
+
+	if (!team) {
+		throw new Error("Failed to create team for OAuth signup");
+	}
+
+	const now = new Date();
+
+	await trx
+		.insert(OrganizationMembershipsTable)
+		.values({
+			organizationId: organization.id,
+			userId,
+			status: "active",
+			isDefault: true,
+			joinedAt: now,
+		});
+
+	await trx
+		.insert(TeamMembershipsTable)
+		.values({
+			teamId: team.id,
+			userId,
+			status: "active",
+			isManager: true,
+			joinedAt: now,
+		});
+}
+
+async function generateUniqueOrganizationSlug(
+	trx: DbTransaction,
+	name: string,
+) {
+	const base = slugify(name) || "organization";
+	let candidate = base;
+	let suffix = 1;
+
+	while (
+		await trx.query.OrganizationsTable.findFirst({
+			columns: { id: true },
+			where: eq(OrganizationsTable.slug, candidate),
+		})
+	) {
+		candidate = `${base}-${suffix++}`;
+	}
+
+	return candidate;
+}
+
+async function generateUniqueTeamSlug(trx: DbTransaction, name: string) {
+	const base = slugify(name) || "team";
+	let candidate = base;
+	let suffix = 1;
+
+	while (
+		await trx.query.TeamsTable.findFirst({
+			columns: { id: true },
+			where: eq(TeamsTable.slug, candidate),
+		})
+	) {
+		candidate = `${base}-${suffix++}`;
+	}
+
+	return candidate;
 }
