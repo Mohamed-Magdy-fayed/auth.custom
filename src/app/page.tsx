@@ -68,7 +68,7 @@ export default function HomePage() {
 							Ship a production-grade auth experience in an afternoon.
 						</H1>
 						<Muted className="max-w-xl text-lg">
-							Auth.custom bundles secure sign-in, organization management, billing, and
+							Gateling Auth bundles secure sign-in, organization management, billing, and
 							documentation so you can focus on your product. Launch on the free tier,
 							then let supporters back you with the Plus plan.
 						</Muted>
@@ -129,7 +129,7 @@ export default function HomePage() {
 						variant="outline"
 						className="rounded-full px-4 py-1 uppercase tracking-wide"
 					>
-						Why teams choose auth.custom
+						Why teams choose Gateling Auth
 					</Badge>
 					<H1 className="text-3xl sm:text-4xl">
 						All the essentials, zero guesswork.
@@ -208,7 +208,7 @@ export default function HomePage() {
 					Ready for production, friendly for tinkering
 				</H1>
 				<Muted className="mx-auto max-w-2xl">
-					Deploy the repo, add your secrets, and invite customers today. Auth.custom
+					Deploy the repo, add your secrets, and invite customers today. Gateling Auth
 					stays free for real projects — the optional Plus tier lets supporters fund
 					the roadmap.
 				</Muted>

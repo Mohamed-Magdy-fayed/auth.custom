@@ -11,7 +11,7 @@ export type DocArticle = {
 export const docsArticles: DocArticle[] = [
     {
         id: "getting-started",
-        title: "Getting started with auth.custom",
+        title: "Getting started with Gateling Auth",
         summary:
             "Create an account, confirm your email, and invite teammates in a single guided flow.",
         category: "Essentials",

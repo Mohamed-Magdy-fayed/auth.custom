@@ -67,7 +67,7 @@ export default function FeaturesPage() {
                     </Badge>
                     <H1 className="text-4xl sm:text-5xl">Everything a modern SaaS needs to run auth</H1>
                     <Muted className="mx-auto max-w-3xl text-lg">
-                        Auth.custom is more than login. It is a complete user lifecycle with security best practices, multi-tenant management, billing, and documentation — ready for production on day one.
+                        Gateling Auth is more than login. It is a complete user lifecycle with security best practices, multi-tenant management, billing, and documentation — ready for production on day one.
                     </Muted>
                     <div className="flex flex-wrap justify-center gap-3">
                         <Button asChild size="lg" className="rounded-full">
@@ -108,7 +108,7 @@ export default function FeaturesPage() {
                         </Small>
                         <H1 className="text-3xl">Production niceties included</H1>
                         <Muted>
-                            Bring your favorite database, transport, or UI toolkit. Auth.custom handles the plumbing so you can focus on customer-facing work.
+                            Bring your favorite database, transport, or UI toolkit. Gateling Auth handles the plumbing so you can focus on customer-facing work.
                         </Muted>
                     </div>
                     <div className="grid gap-6">

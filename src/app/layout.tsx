@@ -11,7 +11,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "auth.custom — Production-ready authentication starter",
+	title: "Gateling Auth — Production-ready authentication starter",
 	description:
 		"Launch a polished SaaS authentication experience with multi-tenant orgs, billing, and docs out of the box.",
 };

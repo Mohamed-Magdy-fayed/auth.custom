@@ -15,7 +15,7 @@ export default async function SessionsPage() {
                 <div className="container flex h-16 items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Link href="/app" className="font-semibold tracking-tight">
-                            auth.custom
+                            Gateling Auth
                         </Link>
                         <Small className="hidden border-l pl-3 text-muted-foreground sm:inline-block">
                             Security center

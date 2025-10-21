@@ -27,7 +27,7 @@ export function SiteHeader({ className, currentUser }: SiteHeaderProps) {
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
                         ac
                     </span>
-                    <span className="hidden sm:inline-block">auth.custom</span>
+                    <span className="hidden sm:inline-block">Gateling Auth</span>
                 </Link>
                 <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
                     {NAV_LINKS.map((item) => (

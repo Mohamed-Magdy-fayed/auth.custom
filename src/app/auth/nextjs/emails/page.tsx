@@ -16,12 +16,12 @@ const EMAIL_PREVIEWS = [
         html: `
 			<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827;">
 			  <p style="margin: 0 0 16px;">Hi there,</p>
-			  <p style="margin: 0 0 16px;">Thanks for creating your workspace on auth.custom. Confirm your email address to finish onboarding.</p>
+			  <p style="margin: 0 0 16px;">Thanks for creating your workspace on Gateling Auth. Confirm your email address to finish onboarding.</p>
 			  <div style="margin: 28px 0; text-align: center;">
 			    <a href="#" style="display: inline-block; padding: 12px 24px; border-radius: 9999px; background: #111111; color: #ffffff; text-decoration: none; font-weight: 600;">Verify email address</a>
 			  </div>
 			  <p style="margin: 0 0 16px;">This link expires in <strong>24 hours</strong>. If you didn't request an account, you can safely ignore this message.</p>
-			  <p style="margin: 0 0 4px;">— The auth.custom team</p>
+			  <p style="margin: 0 0 4px;">— The Gateling Auth team</p>
 			</div>
 		`,
     },
@@ -35,13 +35,13 @@ const EMAIL_PREVIEWS = [
         html: `
 			<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827;">
 			  <p style="margin: 0 0 16px;">Hi there,</p>
-			  <p style="margin: 0 0 16px;">We received a request to reset the password for your auth.custom account. Click the button below to choose a new password.</p>
+			  <p style="margin: 0 0 16px;">We received a request to reset the password for your Gateling Auth account. Click the button below to choose a new password.</p>
 			  <div style="margin: 28px 0; text-align: center;">
 			    <a href="#" style="display: inline-block; padding: 12px 24px; border-radius: 9999px; background: #f97316; color: #ffffff; text-decoration: none; font-weight: 600;">Reset password</a>
 			  </div>
 			  <p style="margin: 0 0 16px;">The link expires in <strong>30 minutes</strong>. If you didn't request this change, ignore this message and your password will stay the same.</p>
 			  <p style="margin: 0 0 4px;">Need help? Reply to this email and we're happy to assist.</p>
-			  <p style="margin: 0;">— The auth.custom team</p>
+			  <p style="margin: 0;">— The Gateling Auth team</p>
 			</div>
 		`,
     },
@@ -55,12 +55,12 @@ const EMAIL_PREVIEWS = [
         html: `
 			<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #111827;">
 			  <p style="margin: 0 0 16px;">Hi there,</p>
-			  <p style="margin: 0 0 16px;">We're confirming that you want to use this email address for your auth.custom account. Click below to finish the change.</p>
+			  <p style="margin: 0 0 16px;">We're confirming that you want to use this email address for your Gateling Auth account. Click below to finish the change.</p>
 			  <div style="margin: 28px 0; text-align: center;">
 			    <a href="#" style="display: inline-block; padding: 12px 24px; border-radius: 9999px; background: #111111; color: #ffffff; text-decoration: none; font-weight: 600;">Confirm email change</a>
 			  </div>
 			  <p style="margin: 0 0 16px;">If you didn't request this update, someone else might be attempting to change your address. Sign in and secure your account.</p>
-			  <p style="margin: 0;">— The auth.custom team</p>
+			  <p style="margin: 0;">— The Gateling Auth team</p>
 			</div>
 		`,
     },

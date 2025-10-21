@@ -111,7 +111,7 @@ export default async function PricingPage() {
                             Start free. Invite your team. Support the project when you are ready.
                         </h1>
                         <Muted className="max-w-2xl text-lg">
-                            Auth.custom ships with a generous free tier that unlocks the complete
+                            Gateling Auth ships with a generous free tier that unlocks the complete
                             authentication experience. When you want to back continued development,
                             upgrade to Plus and unlock priority support.
                         </Muted>
@@ -330,7 +330,7 @@ function PricingCard({ plan }: { plan: PlanDefinition }) {
                     </Button>
                 )}
                 <p className="mt-3 text-center text-sm text-muted-foreground">
-                    Already using auth.custom?{" "}
+                    Already using Gateling Auth?{" "}
                     <Link href="/sign-in" className="underline">
                         Sign in
                     </Link>
