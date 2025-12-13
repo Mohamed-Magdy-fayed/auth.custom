@@ -16,7 +16,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:drop": "drizzle-kit drop",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^5.2.2",

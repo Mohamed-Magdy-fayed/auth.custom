@@ -11,9 +11,8 @@ import {
 	UserRoleAssignmentsTable,
 } from "@/auth/tables";
 import { db } from "@/drizzle/db";
-
+import type { PermissionKey } from "../../config/permissions";
 import { getCurrentUser } from "../currentUser";
-import type { PermissionKey } from "./permissions";
 
 function normalizePermissions(
 	permissionKeys: Array<string | null | undefined>,

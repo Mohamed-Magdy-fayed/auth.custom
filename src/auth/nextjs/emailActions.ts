@@ -1,10 +1,8 @@
 "use server";
 
 import { and, eq, ne } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { type ZodError, z } from "zod";
-import { authMessage } from "@/auth/config";
 import { comparePasswords } from "@/auth/core/passwordHasher";
 import { createTokenValue, hashTokenValue } from "@/auth/core/token";
 import {
@@ -13,6 +11,7 @@ import {
 	UserTokensTable,
 } from "@/auth/tables";
 import { db } from "@/drizzle/db";
+import { getT } from "@/lib/i18n/actions";
 import { getCurrentUser } from "./currentUser";
 import { sendEmailChangeVerification } from "./emails/emailChangeVerification";
 import { sendEmailVerificationEmail } from "./emails/emailVerification";
@@ -28,6 +27,12 @@ type ActionResult = {
 
 type VerifyResult = { status: "success" | "error"; message: string };
 
+type Translator = (
+	key: string,
+	fallback: string,
+	args?: Record<string, unknown>,
+) => string;
+
 type EmailTokenMetadata = {
 	operation?: unknown;
 	newEmail?: unknown;
@@ -36,6 +41,15 @@ type EmailTokenMetadata = {
 };
 
 type EmailTokenRecord = { id: string; userId: string };
+
+async function getTranslator(): Promise<Translator> {
+	const { t } = await getT();
+
+	return (key, fallback, args) => {
+		const value = t(key as any, args as any);
+		return value === key ? fallback : value;
+	};
+}
 
 function normalizeEmail(email: string) {
 	return email.trim().toLowerCase();
@@ -53,7 +67,7 @@ function buildVerificationUrl(origin: string, token: string) {
 	return `${origin}/verify-email?${searchParams.toString()}`;
 }
 
-function validationError(error: ZodError): ActionResult {
+function validationError(error: ZodError, tr: Translator): ActionResult {
 	const flat = z.treeifyError(error);
 	const fieldErrors = Object.fromEntries(
 		Object.entries(flat.errors)
@@ -63,7 +77,7 @@ function validationError(error: ZodError): ActionResult {
 
 	return {
 		success: false,
-		message: authMessage("profile.error.invalidInput", "Invalid input"),
+		message: tr("profile.error.invalidInput", "Invalid input"),
 		fieldErrors,
 	};
 }
@@ -71,6 +85,7 @@ function validationError(error: ZodError): ActionResult {
 export async function requestEmailChange(
 	unsafeData: ChangeEmailInput,
 ): Promise<ActionResult> {
+	const tr = await getTranslator();
 	const currentUser = await getCurrentUser({
 		redirectIfNotFound: true,
 		withFullUser: true,
@@ -78,7 +93,7 @@ export async function requestEmailChange(
 	const parsed = changeEmailSchema.safeParse(unsafeData);
 
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const { newEmail, currentPassword } = parsed.data;
@@ -86,7 +101,7 @@ export async function requestEmailChange(
 	const normalizedCurrentEmail = normalizeEmail(currentUser.email);
 
 	if (normalizedNewEmail === normalizedCurrentEmail) {
-		const message = authMessage(
+		const message = tr(
 			"profile.email.error.sameAddress",
 			"Use a different email address",
 		);
@@ -99,7 +114,7 @@ export async function requestEmailChange(
 	});
 
 	if (existingUser) {
-		const message = authMessage(
+		const message = tr(
 			"profile.email.error.inUse",
 			"Email is already in use",
 		);
@@ -113,7 +128,7 @@ export async function requestEmailChange(
 
 	if (credentials?.passwordHash) {
 		if (!currentPassword) {
-			const message = authMessage(
+			const message = tr(
 				"profile.email.error.passwordRequired",
 				"Enter your current password",
 			);
@@ -131,7 +146,7 @@ export async function requestEmailChange(
 		});
 
 		if (!isValid) {
-			const message = authMessage(
+			const message = tr(
 				"profile.email.error.passwordIncorrect",
 				"Current password is incorrect",
 			);
@@ -178,7 +193,7 @@ export async function requestEmailChange(
 	if (!origin) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"profile.email.error.missingOrigin",
 				"Unable to determine application URL",
 			),
@@ -198,7 +213,7 @@ export async function requestEmailChange(
 		console.error("Failed to send email change verification", error);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"profile.email.error.sendFailed",
 				"We couldn't send the verification email. Please try again.",
 			),
@@ -207,7 +222,7 @@ export async function requestEmailChange(
 
 	return {
 		success: true,
-		message: authMessage(
+		message: tr(
 			"profile.email.success.changeRequested",
 			"Check your new inbox for a verification link.",
 		),
@@ -215,6 +230,7 @@ export async function requestEmailChange(
 }
 
 export async function sendEmailVerification(): Promise<ActionResult> {
+	const tr = await getTranslator();
 	const currentUser = await getCurrentUser({
 		redirectIfNotFound: true,
 		withFullUser: true,
@@ -223,7 +239,7 @@ export async function sendEmailVerification(): Promise<ActionResult> {
 	if (currentUser.emailVerifiedAt) {
 		return {
 			success: true,
-			message: authMessage(
+			message: tr(
 				"emailVerification.alreadyVerified",
 				"Your email is already verified.",
 			),
@@ -235,7 +251,7 @@ export async function sendEmailVerification(): Promise<ActionResult> {
 	if (!origin) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.missingOrigin",
 				"Unable to determine application URL",
 			),
@@ -282,7 +298,7 @@ export async function sendEmailVerification(): Promise<ActionResult> {
 		console.error("Failed to send email verification", error);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.sendFailed",
 				"We couldn't send the verification email. Please try again.",
 			),
@@ -291,7 +307,7 @@ export async function sendEmailVerification(): Promise<ActionResult> {
 
 	return {
 		success: true,
-		message: authMessage(
+		message: tr(
 			"emailVerification.sent",
 			"Check your inbox and follow the link to verify your email.",
 		),
@@ -302,6 +318,7 @@ async function completeEmailChange(
 	record: EmailTokenRecord,
 	metadata: EmailTokenMetadata,
 	now: Date,
+	tr: Translator,
 ): Promise<VerifyResult> {
 	const newEmail =
 		typeof metadata.newEmail === "string" ? metadata.newEmail : null;
@@ -315,7 +332,7 @@ async function completeEmailChange(
 	if (!newEmail || !normalizedEmail) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.unableToVerify",
 				"Unable to verify email change.",
 			),
@@ -333,7 +350,7 @@ async function completeEmailChange(
 	if (conflict) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.conflict",
 				"This email is already associated with another account.",
 			),
@@ -370,7 +387,7 @@ async function completeEmailChange(
 		console.error("Failed to finalize email change verification", error);
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.unableToVerify",
 				"Unable to verify email change.",
 			),
@@ -379,7 +396,7 @@ async function completeEmailChange(
 
 	return {
 		status: "success",
-		message: authMessage(
+		message: tr(
 			"emailVerification.success.changed",
 			"Email updated successfully.",
 		),
@@ -390,6 +407,7 @@ async function completeEmailVerification(
 	record: EmailTokenRecord,
 	metadata: EmailTokenMetadata,
 	now: Date,
+	tr: Translator,
 ): Promise<VerifyResult> {
 	const user = await db.query.UsersTable.findFirst({
 		columns: { id: true, emailNormalized: true, status: true },
@@ -399,7 +417,7 @@ async function completeEmailVerification(
 	if (!user) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.generic",
 				"We could not verify your email. Please request a new link.",
 			),
@@ -414,7 +432,7 @@ async function completeEmailVerification(
 	if (normalizedEmail && normalizedEmail !== user.emailNormalized) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.invalidToken",
 				"Invalid email verification link.",
 			),
@@ -449,7 +467,7 @@ async function completeEmailVerification(
 		console.error("Failed to finalize email verification", error);
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.generic",
 				"We could not verify your email. Please request a new link.",
 			),
@@ -458,7 +476,7 @@ async function completeEmailVerification(
 
 	return {
 		status: "success",
-		message: authMessage(
+		message: tr(
 			"emailVerification.success.verified",
 			"Email verified successfully.",
 		),
@@ -466,10 +484,12 @@ async function completeEmailVerification(
 }
 
 export async function verifyEmailToken(token: string): Promise<VerifyResult> {
+	const tr = await getTranslator();
+
 	if (!token || token.length === 0) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.invalidToken",
 				"Invalid email verification link.",
 			),
@@ -494,7 +514,7 @@ export async function verifyEmailToken(token: string): Promise<VerifyResult> {
 	if (!record) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.invalidToken",
 				"Invalid email verification link.",
 			),
@@ -506,7 +526,7 @@ export async function verifyEmailToken(token: string): Promise<VerifyResult> {
 	if (record.consumedAt != null || record.expiresAt.getTime() <= now.getTime()) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"emailVerification.error.expired",
 				"This verification link has expired.",
 			),
@@ -517,10 +537,10 @@ export async function verifyEmailToken(token: string): Promise<VerifyResult> {
 	const operation = metadata.operation === "change" ? "change" : "verify";
 
 	if (operation === "change") {
-		return completeEmailChange(record, metadata, now);
+		return completeEmailChange(record, metadata, now, tr);
 	}
 
-	return completeEmailVerification(record, metadata, now);
+	return completeEmailVerification(record, metadata, now, tr);
 }
 
 export { verifyEmailToken as verifyEmailChange };

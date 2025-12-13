@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { authMessage } from "@/auth/config";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingSwap } from "@/components/ui/loading-swap";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { createOrganization } from "../org/actions";
 import {
 	type CreateOrganizationInput,
@@ -25,6 +25,7 @@ import {
 type FormValues = CreateOrganizationInput & { description?: string };
 
 export function CreateOrganizationForm() {
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -93,11 +94,11 @@ export function CreateOrganizationForm() {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("org.create.nameLabel", "Organization name")}
+								{t("org.create.nameLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input
-									placeholder={authMessage("org.create.namePlaceholder", "Acme Inc.")}
+									placeholder={t("org.create.namePlaceholder")}
 									{...field}
 								/>
 							</FormControl>
@@ -111,14 +112,11 @@ export function CreateOrganizationForm() {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("org.create.descriptionLabel", "Description")}
+								{t("org.create.descriptionLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input
-									placeholder={authMessage(
-										"org.create.descriptionPlaceholder",
-										"Optional description",
-									)}
+									placeholder={t("org.create.descriptionPlaceholder")}
 									{...field}
 								/>
 							</FormControl>
@@ -130,9 +128,9 @@ export function CreateOrganizationForm() {
 					<Button type="submit" disabled={isPending}>
 						<LoadingSwap
 							isLoading={isPending}
-							text={authMessage("org.create.submitting", "Creating...")}
+							text={t("org.create.submitting")}
 						>
-							{authMessage("org.create.submit", "Create organization")}
+							{t("org.create.submit")}
 						</LoadingSwap>
 					</Button>
 				</div>

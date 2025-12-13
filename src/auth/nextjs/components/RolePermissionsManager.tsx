@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
 	useCallback,
@@ -8,7 +8,6 @@ import {
 	useTransition,
 } from "react";
 
-import { authMessage } from "@/auth/config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,11 +18,12 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Muted, Small } from "@/components/ui/typography";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import type { PermissionKey } from "../../config/permissions";
 import {
 	getOrganizationAuthorization,
 	setRolePermissions,
 } from "../org/actions";
-import type { PermissionKey } from "../org/permissions";
 import type {
 	AuthorizationRoleSummary,
 	AuthorizationSummary,
@@ -48,6 +48,7 @@ export function RolePermissionsManager({
 	authorization,
 	onAuthorizationChange,
 }: RolePermissionsManagerProps) {
+	const { t } = useTranslation();
 	const { roles, permissionCatalog, canEdit } = authorization;
 	const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
 		roles[0]?.id ?? null,
@@ -99,13 +100,10 @@ export function RolePermissionsManager({
 			console.error(error);
 			setStatus({
 				type: "error",
-				message: authMessage(
-					"teams.permissions.refreshError",
-					"Unable to refresh permission data.",
-				),
+				message: t("teams.permissions.refreshError"),
 			});
 		}
-	}, [organizationId, onAuthorizationChange]);
+	}, [organizationId, onAuthorizationChange, t]);
 
 	const togglePermission = (key: PermissionKey) => {
 		if (!canModify || isPending) return;
@@ -148,10 +146,7 @@ export function RolePermissionsManager({
 			if (result.message) {
 				setStatus({ type: "success", message: result.message });
 			} else {
-				setStatus({
-					type: "success",
-					message: authMessage("teams.permissions.updated", "Permissions updated."),
-				});
+				setStatus({ type: "success", message: t("teams.permissions.updated") });
 			}
 
 			await handleRefreshAuthorization();
@@ -162,15 +157,8 @@ export function RolePermissionsManager({
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>
-						{authMessage("teams.permissions.title", "Permissions")}
-					</CardTitle>
-					<CardDescription>
-						{authMessage(
-							"teams.permissions.empty",
-							"Create a role before assigning permissions.",
-						)}
-					</CardDescription>
+					<CardTitle>{t("teams.permissions.title")}</CardTitle>
+					<CardDescription>{t("teams.permissions.empty")}</CardDescription>
 				</CardHeader>
 			</Card>
 		);
@@ -179,15 +167,8 @@ export function RolePermissionsManager({
 	return (
 		<Card>
 			<CardHeader className="gap-3">
-				<CardTitle>
-					{authMessage("teams.permissions.title", "Permissions")}
-				</CardTitle>
-				<CardDescription>
-					{authMessage(
-						"teams.permissions.subtitle",
-						"Select a role to review or adjust its permissions.",
-					)}
-				</CardDescription>
+				<CardTitle>{t("teams.permissions.title")}</CardTitle>
+				<CardDescription>{t("teams.permissions.subtitle")}</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-6">
 				<div className="grid gap-4 lg:grid-cols-[240px_1fr]">
@@ -199,26 +180,27 @@ export function RolePermissionsManager({
 									key={role.id}
 									type="button"
 									onClick={() => setSelectedRoleId(role.id)}
-									className={`w-full rounded-lg border px-3 py-2 text-left transition hover:bg-accent ${isActive ? "border-primary bg-accent" : "border-border"}`}
+									className={`w-full rounded-lg border px-3 py-2 text-left transition hover:bg-accent ${isActive ? "border-primary bg-accent" : "border-border"
+										}`}
 								>
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex flex-col">
 											<span className="text-sm font-medium">{role.name}</span>
 											<Small className="text-muted-foreground">
 												{role.scope === "organization"
-													? authMessage("teams.permissions.scopeOrg", "Organization role")
-													: authMessage("teams.permissions.scopeTeam", "Team role")}
+													? t("teams.permissions.scopeOrg")
+													: t("teams.permissions.scopeTeam")}
 											</Small>
 										</div>
 										<div className="flex flex-wrap gap-1">
 											{role.isDefault ? (
 												<Badge variant="secondary">
-													{authMessage("teams.permissions.default", "Default")}
+													{t("teams.permissions.default")}
 												</Badge>
 											) : null}
 											{role.locked ? (
 												<Badge variant="outline">
-													{authMessage("teams.permissions.locked", "Locked")}
+													{t("teams.permissions.locked")}
 												</Badge>
 											) : null}
 										</div>
@@ -241,21 +223,14 @@ export function RolePermissionsManager({
 						) : null}
 
 						{!selectedRole ? (
-							<Muted>
-								{authMessage(
-									"teams.permissions.selectRole",
-									"Select a role to view its permissions.",
-								)}
-							</Muted>
+							<Muted>{t("teams.permissions.selectRole")}</Muted>
 						) : (
 							<div className="space-y-4">
 								<div className="flex flex-wrap items-center gap-2">
 									<Badge variant="outline">
-										{authMessage(
-											"teams.permissions.assignmentCount",
-											"{count} assignments",
-											{ count: String(selectedRole.assignmentCount) },
-										)}
+										{t("teams.permissions.assignmentCount", {
+											count: String(selectedRole.assignmentCount),
+										})}
 									</Badge>
 									{selectedRole.description ? (
 										<Small className="text-muted-foreground">
@@ -264,12 +239,7 @@ export function RolePermissionsManager({
 									) : null}
 								</div>
 								{selectedRole.locked ? (
-									<Muted>
-										{authMessage(
-											"teams.permissions.lockedMessage",
-											"This role is managed by the system and cannot be edited.",
-										)}
-									</Muted>
+									<Muted>{t("teams.permissions.lockedMessage")}</Muted>
 								) : null}
 								<div className="space-y-6">
 									{permissionCatalog.map((group) => (
@@ -279,10 +249,7 @@ export function RolePermissionsManager({
 													{group.category}
 												</p>
 												<Small className="text-muted-foreground">
-													{authMessage(
-														"teams.permissions.groupHelper",
-														"Toggle capabilities for this role.",
-													)}
+													{t("teams.permissions.groupHelper")}
 												</Small>
 											</div>
 											<div className="space-y-2">
@@ -291,13 +258,13 @@ export function RolePermissionsManager({
 													return (
 														<label
 															key={item.key}
-															className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${
-																checked ? "border-primary bg-accent" : "border-border"
-															} ${
-																!canModify
+															className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${checked
+																	? "border-primary bg-accent"
+																	: "border-border"
+																} ${!canModify
 																	? "cursor-not-allowed opacity-60"
 																	: "hover:border-primary"
-															}`}
+																}`}
 														>
 															<input
 																type="checkbox"
@@ -328,8 +295,8 @@ export function RolePermissionsManager({
 										disabled={!isDirty || !canModify || isPending}
 									>
 										{isPending
-											? authMessage("teams.permissions.saving", "Saving...")
-											: authMessage("teams.permissions.save", "Save changes")}
+											? t("teams.permissions.saving")
+											: t("teams.permissions.save")}
 									</Button>
 									<Button
 										type="button"
@@ -337,7 +304,7 @@ export function RolePermissionsManager({
 										onClick={handleReset}
 										disabled={!isDirty || isPending}
 									>
-										{authMessage("teams.permissions.reset", "Reset")}
+										{t("teams.permissions.reset")}
 									</Button>
 								</div>
 							</div>
@@ -345,12 +312,7 @@ export function RolePermissionsManager({
 					</div>
 				</div>
 				{!canEdit ? (
-					<Muted>
-						{authMessage(
-							"teams.permissions.readOnly",
-							"You can review permissions, but only organization owners can make changes.",
-						)}
-					</Muted>
+					<Muted>{t("teams.permissions.readOnly")}</Muted>
 				) : null}
 			</CardContent>
 		</Card>

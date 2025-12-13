@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { authMessage } from "@/auth/config";
 import type { OAuthProvider } from "@/auth/tables";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +18,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { oAuthSignIn, signIn } from "../actions";
 import {
 	beginPasskeyAuthentication,
@@ -35,6 +35,7 @@ type SignInFormProps = {
 };
 
 export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
+	const { t } = useTranslation();
 	const [error, setError] = useState<string>();
 	const [oauthError, setOauthError] = useState<string>();
 	const [isPasskeyPending, setIsPasskeyPending] = useState(false);
@@ -83,20 +84,14 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 		const email = form.getValues("email");
 		if (!email) {
 			setError(
-				authMessage(
-					"passkeys.auth.error.emailRequired",
-					"Enter your email to sign in with a passkey.",
-				),
+				t("passkeys.auth.error.emailRequired"),
 			);
 			return;
 		}
 
 		if (typeof window === "undefined" || !window.PublicKeyCredential) {
 			setError(
-				authMessage(
-					"passkeys.auth.error.unsupported",
-					"Passkeys aren't supported in this browser yet.",
-				),
+				t("passkeys.auth.error.unsupported"),
 			);
 			return;
 		}
@@ -131,21 +126,13 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 				(caught.name === "NotAllowedError" || caught.name === "AbortError")
 			) {
 				setError(
-					authMessage(
-						"passkeys.auth.error.cancelled",
-						"Passkey sign-in was cancelled.",
-					),
+					t("passkeys.auth.error.cancelled"),
 				);
 				return;
 			}
 
 			console.error("Passkey sign-in failed", caught);
-			setError(
-				authMessage(
-					"passkeys.auth.error.generic",
-					"Unable to sign in with passkey.",
-				),
-			);
+			setError(t("passkeys.auth.error.generic"));
 		} finally {
 			setIsPasskeyPending(false);
 		}
@@ -174,10 +161,7 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 								type="button"
 								onClick={async () => await handleOAuthClick(option.provider)}
 							>
-								{authMessage("auth.oauth.providerButton", option.label, {
-									provider: option.label,
-									providerKey: option.provider,
-								})}
+								{t("auth.oauth.providerButton", { provider: option.label })}
 							</Button>
 						))}
 					</div>
@@ -187,7 +171,7 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{authMessage("auth.signIn.emailLabel", "Email")}</FormLabel>
+							<FormLabel>{t("auth.signIn.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" {...field} />
 							</FormControl>
@@ -201,7 +185,7 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("auth.signIn.passwordLabel", "Password")}
+								{t("auth.signIn.passwordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" {...field} />
@@ -218,22 +202,22 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 						onClick={handlePasskeySignIn}
 					>
 						{isPasskeyPending
-							? authMessage("passkeys.auth.pending", "Waiting for passkey...")
-							: authMessage("passkeys.auth.button", "Sign in with passkey")}
+							? t("passkeys.auth.pending")
+							: t("passkeys.auth.button")}
 					</Button>
 					<div className="flex gap-4">
 						<Button asChild variant="link">
 							<Link href="/forgot-password">
-								{authMessage("auth.signIn.forgotPassword", "Forgot password?")}
+								{t("auth.signIn.forgotPassword")}
 							</Link>
 						</Button>
 						<Button asChild variant="link">
 							<Link href={signUpHref}>
-								{authMessage("auth.signIn.toSignUp", "Sign Up")}
+								{t("auth.signIn.toSignUp")}
 							</Link>
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{authMessage("auth.signIn.submit", "Sign In")}
+							{t("auth.signIn.submit")}
 						</Button>
 					</div>
 				</div>

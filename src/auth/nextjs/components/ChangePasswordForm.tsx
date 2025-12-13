@@ -3,7 +3,6 @@
 import { useCallback, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { authMessage } from "@/auth/config";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -14,6 +13,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 import { changePassword, createPassword } from "../profileActions";
 import type {
@@ -25,6 +25,8 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 	type FormValues = typeof isCreate extends true
 		? CreatePasswordInput
 		: ChangePasswordInput;
+
+	const { t } = useTranslation();
 
 	const [status, setStatus] = useState<{
 		type: "success" | "error";
@@ -68,7 +70,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 				}
 			});
 		},
-		[form],
+		[form, isCreate],
 	);
 
 	return (
@@ -92,7 +94,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{authMessage("profile.password.currentLabel", "Current password")}
+									{t("profile.password.currentLabel")}
 								</FormLabel>
 								<FormControl>
 									<Input type="password" autoComplete="current-password" {...field} />
@@ -108,7 +110,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("profile.password.newLabel", "New password")}
+								{t("profile.password.newLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="new-password" {...field} />
@@ -123,7 +125,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("profile.password.confirmLabel", "Confirm new password")}
+								{t("profile.password.confirmLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="new-password" {...field} />
@@ -134,9 +136,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 				/>
 				<div className="flex justify-end">
 					<Button type="submit" disabled={isPending}>
-						{isPending
-							? authMessage("profile.password.updating", "Updating...")
-							: authMessage("profile.password.submit", "Update password")}
+						{isPending ? t("profile.password.updating") : t("profile.password.submit")}
 					</Button>
 				</div>
 			</form>

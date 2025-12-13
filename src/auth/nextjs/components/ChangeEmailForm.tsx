@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { authMessage } from "@/auth/config";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -16,6 +15,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { requestEmailChange } from "../emailActions";
 import { changeEmailSchema } from "../profileSchemas";
 
@@ -24,6 +24,7 @@ type FormValues = z.infer<typeof changeEmailSchema>;
 type ChangeEmailFormProps = { currentEmail: string };
 
 export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<{
 		success: boolean;
 		message: string;
@@ -46,11 +47,8 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 				message:
 					result.message ??
 					(result.success
-						? authMessage(
-								"profile.email.success.changeRequested",
-								"Check your new inbox for a verification link.",
-							)
-						: authMessage("profile.email.error.generic", "Unable to update email.")),
+						? t("profile.email.success.changeRequested")
+						: t("profile.email.error.generic")),
 			});
 
 			if (!result.success && result.fieldErrors) {
@@ -72,7 +70,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 		<Form {...form}>
 			<form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
 				<p className="text-sm text-muted-foreground">
-					{authMessage("profile.email.current", "Current email:")} {currentEmail}
+					{t("profile.email.current")} {currentEmail}
 				</p>
 				{status && (
 					<p
@@ -88,9 +86,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 					name="newEmail"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>
-								{authMessage("profile.email.newLabel", "New email")}
-							</FormLabel>
+							<FormLabel>{t("profile.email.newLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -103,9 +99,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 					name="confirmEmail"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>
-								{authMessage("profile.email.confirmLabel", "Confirm new email")}
-							</FormLabel>
+							<FormLabel>{t("profile.email.confirmLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -119,10 +113,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage(
-									"profile.email.currentPasswordLabel",
-									"Current password (required if you set one)",
-								)}
+								{t("profile.email.currentPasswordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="current-password" {...field} />
@@ -133,9 +124,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 				/>
 				<div className="flex justify-end">
 					<Button type="submit" disabled={isPending}>
-						{isPending
-							? authMessage("profile.email.sending", "Sending...")
-							: authMessage("profile.email.submit", "Send verification")}
+						{isPending ? t("profile.email.sending") : t("profile.email.submit")}
 					</Button>
 				</div>
 			</form>

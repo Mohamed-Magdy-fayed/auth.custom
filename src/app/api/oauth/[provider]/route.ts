@@ -60,15 +60,7 @@ export async function GET(
 			});
 		}
 
-		await createSession(
-			{ id: user.id, role: user.role, sessionId: currentSession?.sessionId },
-			cookieJar,
-			{
-				userAgent: request.headers.get("user-agent") ?? undefined,
-				ipAddress:
-					request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined,
-			},
-		);
+		await createSession({ id: user.id, role: user.role }, cookieJar);
 	} catch (error: any) {
 		console.error(error);
 		redirect(
@@ -118,25 +110,25 @@ function connectUserToAccount(
 		const normalizedEmail = normalizeEmail(email);
 		const existingUser = options.currentUserId
 			? await trx.query.UsersTable.findFirst({
-				columns: { id: true, emailVerifiedAt: true },
-				where: eq(UsersTable.id, options.currentUserId),
-				with: {
-					roleAssignments: {
-						columns: {},
-						with: { role: { columns: { key: true } } },
+					columns: { id: true, emailVerifiedAt: true },
+					where: eq(UsersTable.id, options.currentUserId),
+					with: {
+						roleAssignments: {
+							columns: {},
+							with: { role: { columns: { key: true } } },
+						},
 					},
-				},
-			})
+				})
 			: await trx.query.UsersTable.findFirst({
-				columns: { id: true, emailVerifiedAt: true },
-				where: eq(UsersTable.emailNormalized, normalizedEmail),
-				with: {
-					roleAssignments: {
-						columns: {},
-						with: { role: { columns: { key: true } } },
+					columns: { id: true, emailVerifiedAt: true },
+					where: eq(UsersTable.emailNormalized, normalizedEmail),
+					with: {
+						roleAssignments: {
+							columns: {},
+							with: { role: { columns: { key: true } } },
+						},
 					},
-				},
-			});
+				});
 
 		let user = existingUser;
 

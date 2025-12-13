@@ -1,1810 +1,1644 @@
 {
-  "id": "58fea4f9-3019-4bd0-a6d1-fa136d5c2505",
-  "prevId": "322a3ab4-44c6-4b2e-863b-4e1bc97c4741",
-  "version": "7",
-  "dialect": "postgresql",
-  "tables": {
-    "public.auth_biometric_credentials": {
-      "name": "auth_biometric_credentials",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "userId": {
-          "name": "userId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "credentialId": {
-          "name": "credentialId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "publicKey": {
-          "name": "publicKey",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "transports": {
-          "name": "transports",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "signCount": {
-          "name": "signCount",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "aaguid": {
-          "name": "aaguid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "isBackupEligible": {
-          "name": "isBackupEligible",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "isBackupState": {
-          "name": "isBackupState",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "isUserVerified": {
-          "name": "isUserVerified",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "lastUsedAt": {
-          "name": "lastUsedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_biometric_credentials_userId_auth_users_id_fk": {
-          "name": "auth_biometric_credentials_userId_auth_users_id_fk",
-          "tableFrom": "auth_biometric_credentials",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_organization_memberships": {
-      "name": "auth_organization_memberships",
-      "schema": "",
-      "columns": {
-        "organizationId": {
-          "name": "organizationId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "userId": {
-          "name": "userId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "roleId": {
-          "name": "roleId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "auth_org_membership_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "isDefault": {
-          "name": "isDefault",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "invitedById": {
-          "name": "invitedById",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "joinedAt": {
-          "name": "joinedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "org_memberships_org_fk": {
-          "name": "org_memberships_org_fk",
-          "tableFrom": "auth_organization_memberships",
-          "tableTo": "auth_organizations",
-          "columnsFrom": [
-            "organizationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "org_memberships_user_fk": {
-          "name": "org_memberships_user_fk",
-          "tableFrom": "auth_organization_memberships",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "org_memberships_role_fk": {
-          "name": "org_memberships_role_fk",
-          "tableFrom": "auth_organization_memberships",
-          "tableTo": "auth_roles",
-          "columnsFrom": [
-            "roleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "org_memberships_inviter_fk": {
-          "name": "org_memberships_inviter_fk",
-          "tableFrom": "auth_organization_memberships",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "invitedById"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "auth_organization_memberships_organizationId_userId_pk": {
-          "name": "auth_organization_memberships_organizationId_userId_pk",
-          "columns": [
-            "organizationId",
-            "userId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_organizations": {
-      "name": "auth_organizations",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdById": {
-          "name": "createdById",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_organizations_createdById_auth_users_id_fk": {
-          "name": "auth_organizations_createdById_auth_users_id_fk",
-          "tableFrom": "auth_organizations",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "createdById"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "auth_organizations_slug_unique": {
-          "name": "auth_organizations_slug_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_permissions": {
-      "name": "auth_permissions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "key": {
-          "name": "key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_role_permissions": {
-      "name": "auth_role_permissions",
-      "schema": "",
-      "columns": {
-        "roleId": {
-          "name": "roleId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "permissionId": {
-          "name": "permissionId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_role_permissions_roleId_auth_roles_id_fk": {
-          "name": "auth_role_permissions_roleId_auth_roles_id_fk",
-          "tableFrom": "auth_role_permissions",
-          "tableTo": "auth_roles",
-          "columnsFrom": [
-            "roleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "auth_role_permissions_permissionId_auth_permissions_id_fk": {
-          "name": "auth_role_permissions_permissionId_auth_permissions_id_fk",
-          "tableFrom": "auth_role_permissions",
-          "tableTo": "auth_permissions",
-          "columnsFrom": [
-            "permissionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "auth_role_permissions_roleId_permissionId_pk": {
-          "name": "auth_role_permissions_roleId_permissionId_pk",
-          "columns": [
-            "roleId",
-            "permissionId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_roles": {
-      "name": "auth_roles",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "key": {
-          "name": "key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "scope": {
-          "name": "scope",
-          "type": "auth_role_scope",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'system'"
-        },
-        "organization_id": {
-          "name": "organization_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_default": {
-          "name": "is_default",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        }
-      },
-      "indexes": {
-        "auth_roles_key_organization_unique": {
-          "name": "auth_roles_key_organization_unique",
-          "columns": [
-            {
-              "expression": "organization_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "auth_roles_organization_id_auth_organizations_id_fk": {
-          "name": "auth_roles_organization_id_auth_organizations_id_fk",
-          "tableFrom": "auth_roles",
-          "tableTo": "auth_organizations",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_sessions": {
-      "name": "auth_sessions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "session_token_hash": {
-          "name": "session_token_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "refresh_token_hash": {
-          "name": "refresh_token_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "auth_session_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "last_active_at": {
-          "name": "last_active_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "revoked_at": {
-          "name": "revoked_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revoked_by": {
-          "name": "revoked_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "ip_address": {
-          "name": "ip_address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "device": {
-          "name": "device",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "platform": {
-          "name": "platform",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "country": {
-          "name": "country",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "city": {
-          "name": "city",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_sessions_user_id_auth_users_id_fk": {
-          "name": "auth_sessions_user_id_auth_users_id_fk",
-          "tableFrom": "auth_sessions",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "auth_sessions_revoked_by_auth_users_id_fk": {
-          "name": "auth_sessions_revoked_by_auth_users_id_fk",
-          "tableFrom": "auth_sessions",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "revoked_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_team_memberships": {
-      "name": "auth_team_memberships",
-      "schema": "",
-      "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "teamId": {
-          "name": "teamId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "userId": {
-          "name": "userId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "roleId": {
-          "name": "roleId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "customTitle": {
-          "name": "customTitle",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "auth_team_membership_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "isManager": {
-          "name": "isManager",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "joinedAt": {
-          "name": "joinedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_team_memberships_teamId_auth_teams_id_fk": {
-          "name": "auth_team_memberships_teamId_auth_teams_id_fk",
-          "tableFrom": "auth_team_memberships",
-          "tableTo": "auth_teams",
-          "columnsFrom": [
-            "teamId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "auth_team_memberships_userId_auth_users_id_fk": {
-          "name": "auth_team_memberships_userId_auth_users_id_fk",
-          "tableFrom": "auth_team_memberships",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "auth_team_memberships_roleId_auth_roles_id_fk": {
-          "name": "auth_team_memberships_roleId_auth_roles_id_fk",
-          "tableFrom": "auth_team_memberships",
-          "tableTo": "auth_roles",
-          "columnsFrom": [
-            "roleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "auth_team_memberships_teamId_userId_pk": {
-          "name": "auth_team_memberships_teamId_userId_pk",
-          "columns": [
-            "teamId",
-            "userId"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_teams": {
-      "name": "auth_teams",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "organizationId": {
-          "name": "organizationId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parentTeamId": {
-          "name": "parentTeamId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stripe_subscription_id": {
-          "name": "stripe_subscription_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stripe_product_id": {
-          "name": "stripe_product_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "plan_name": {
-          "name": "plan_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "subscription_status": {
-          "name": "subscription_status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_teams_organizationId_auth_organizations_id_fk": {
-          "name": "auth_teams_organizationId_auth_organizations_id_fk",
-          "tableFrom": "auth_teams",
-          "tableTo": "auth_organizations",
-          "columnsFrom": [
-            "organizationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "auth_teams_slug_unique": {
-          "name": "auth_teams_slug_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
-        },
-        "auth_teams_stripe_customer_id_unique": {
-          "name": "auth_teams_stripe_customer_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_customer_id"
-          ]
-        },
-        "auth_teams_stripe_subscription_id_unique": {
-          "name": "auth_teams_stripe_subscription_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripe_subscription_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_user_credentials": {
-      "name": "auth_user_credentials",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "passwordHash": {
-          "name": "passwordHash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "passwordSalt": {
-          "name": "passwordSalt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expiresAt": {
-          "name": "expiresAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "mustChangePassword": {
-          "name": "mustChangePassword",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "lastChangedAt": {
-          "name": "lastChangedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_user_oauth_accounts": {
-      "name": "auth_user_oauth_accounts",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "provider": {
-          "name": "provider",
-          "type": "auth_oauth_provider",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "providerAccountId": {
-          "name": "providerAccountId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "displayName": {
-          "name": "displayName",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "profileUrl": {
-          "name": "profileUrl",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "accessToken": {
-          "name": "accessToken",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "refreshToken": {
-          "name": "refreshToken",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "scopes": {
-          "name": "scopes",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expiresAt": {
-          "name": "expiresAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_user_oauth_accounts_user_id_auth_users_id_fk": {
-          "name": "auth_user_oauth_accounts_user_id_auth_users_id_fk",
-          "tableFrom": "auth_user_oauth_accounts",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "auth_user_oauth_accounts_providerAccountId_provider_pk": {
-          "name": "auth_user_oauth_accounts_providerAccountId_provider_pk",
-          "columns": [
-            "providerAccountId",
-            "provider"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_user_role_assignments": {
-      "name": "auth_user_role_assignments",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "roleId": {
-          "name": "roleId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "organizationId": {
-          "name": "organizationId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "teamId": {
-          "name": "teamId",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "assignedById": {
-          "name": "assignedById",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "assignedAt": {
-          "name": "assignedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "auth_user_role_assignments_unique": {
-          "name": "auth_user_role_assignments_unique",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "roleId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "organizationId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "teamId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "auth_user_role_assignments_user_id_auth_users_id_fk": {
-          "name": "auth_user_role_assignments_user_id_auth_users_id_fk",
-          "tableFrom": "auth_user_role_assignments",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "user_role_assignments_role_fk": {
-          "name": "user_role_assignments_role_fk",
-          "tableFrom": "auth_user_role_assignments",
-          "tableTo": "auth_roles",
-          "columnsFrom": [
-            "roleId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "user_role_assignments_user_fk": {
-          "name": "user_role_assignments_user_fk",
-          "tableFrom": "auth_user_role_assignments",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "user_role_assignments_org_fk": {
-          "name": "user_role_assignments_org_fk",
-          "tableFrom": "auth_user_role_assignments",
-          "tableTo": "auth_organizations",
-          "columnsFrom": [
-            "organizationId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "user_role_assignments_team_fk": {
-          "name": "user_role_assignments_team_fk",
-          "tableFrom": "auth_user_role_assignments",
-          "tableTo": "auth_teams",
-          "columnsFrom": [
-            "teamId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "user_role_assignments_assigned_by_fk": {
-          "name": "user_role_assignments_assigned_by_fk",
-          "tableFrom": "auth_user_role_assignments",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "assignedById"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_user_tokens": {
-      "name": "auth_user_tokens",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "tokenHash": {
-          "name": "tokenHash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "type": {
-          "name": "type",
-          "type": "auth_user_token_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expiresAt": {
-          "name": "expiresAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "consumedAt": {
-          "name": "consumedAt",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'null'::jsonb"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "auth_user_tokens_user_id_auth_users_id_fk": {
-          "name": "auth_user_tokens_user_id_auth_users_id_fk",
-          "tableFrom": "auth_user_tokens",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "auth_user_tokens_tokenHash_unique": {
-          "name": "auth_user_tokens_tokenHash_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "tokenHash"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.auth_users": {
-      "name": "auth_users",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email_normalized": {
-          "name": "email_normalized",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "display_name": {
-          "name": "display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "given_name": {
-          "name": "given_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "family_name": {
-          "name": "family_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "avatar_url": {
-          "name": "avatar_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "locale": {
-          "name": "locale",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "timezone": {
-          "name": "timezone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "auth_user_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'active'"
-        },
-        "email_verified_at": {
-          "name": "email_verified_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_sign_in_at": {
-          "name": "last_sign_in_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "auth_users_email_normalized_unique": {
-          "name": "auth_users_email_normalized_unique",
-          "columns": [
-            {
-              "expression": "email_normalized",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.saas_activity_logs": {
-      "name": "saas_activity_logs",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "team_id": {
-          "name": "team_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "action": {
-          "name": "action",
-          "type": "saas_activity_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "ip_address": {
-          "name": "ip_address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "saas_activity_logs_team_id_auth_teams_id_fk": {
-          "name": "saas_activity_logs_team_id_auth_teams_id_fk",
-          "tableFrom": "saas_activity_logs",
-          "tableTo": "auth_teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "saas_activity_logs_user_id_auth_users_id_fk": {
-          "name": "saas_activity_logs_user_id_auth_users_id_fk",
-          "tableFrom": "saas_activity_logs",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.saas_invitations": {
-      "name": "saas_invitations",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "team_id": {
-          "name": "team_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "role_key": {
-          "name": "role_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "invited_by_user_id": {
-          "name": "invited_by_user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "saas_invitation_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "token": {
-          "name": "token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "accepted_at": {
-          "name": "accepted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "saas_invitations_team_id_auth_teams_id_fk": {
-          "name": "saas_invitations_team_id_auth_teams_id_fk",
-          "tableFrom": "saas_invitations",
-          "tableTo": "auth_teams",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "saas_invitations_invited_by_user_id_auth_users_id_fk": {
-          "name": "saas_invitations_invited_by_user_id_auth_users_id_fk",
-          "tableFrom": "saas_invitations",
-          "tableTo": "auth_users",
-          "columnsFrom": [
-            "invited_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "saas_invitations_token_unique": {
-          "name": "saas_invitations_token_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    }
-  },
-  "enums": {
-    "public.auth_org_membership_status": {
-      "name": "auth_org_membership_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "active",
-        "inactive"
-      ]
-    },
-    "public.auth_role_scope": {
-      "name": "auth_role_scope",
-      "schema": "public",
-      "values": [
-        "system",
-        "organization",
-        "team"
-      ]
-    },
-    "public.auth_session_status": {
-      "name": "auth_session_status",
-      "schema": "public",
-      "values": [
-        "active",
-        "revoked",
-        "expired"
-      ]
-    },
-    "public.auth_team_membership_status": {
-      "name": "auth_team_membership_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "active",
-        "inactive"
-      ]
-    },
-    "public.auth_oauth_provider": {
-      "name": "auth_oauth_provider",
-      "schema": "public",
-      "values": [
-        "google",
-        "github",
-        "microsoft",
-        "apple"
-      ]
-    },
-    "public.auth_user_token_type": {
-      "name": "auth_user_token_type",
-      "schema": "public",
-      "values": [
-        "email_verification",
-        "password_reset",
-        "magic_link",
-        "otp",
-        "device_trust"
-      ]
-    },
-    "public.auth_user_status": {
-      "name": "auth_user_status",
-      "schema": "public",
-      "values": [
-        "active",
-        "invited",
-        "inactive",
-        "suspended"
-      ]
-    },
-    "public.saas_activity_type": {
-      "name": "saas_activity_type",
-      "schema": "public",
-      "values": [
-        "SIGN_UP",
-        "SIGN_IN",
-        "SIGN_OUT",
-        "UPDATE_PASSWORD",
-        "DELETE_ACCOUNT",
-        "UPDATE_ACCOUNT",
-        "CREATE_TEAM",
-        "REMOVE_TEAM_MEMBER",
-        "INVITE_TEAM_MEMBER",
-        "ACCEPT_INVITATION"
-      ]
-    },
-    "public.saas_invitation_status": {
-      "name": "saas_invitation_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "accepted",
-        "revoked"
-      ]
-    }
-  },
-  "schemas": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
-  "views": {},
-  "_meta": {
-    "columns": {},
-    "schemas": {},
-    "tables": {}
-  }
+	"id": "58fea4f9-3019-4bd0-a6d1-fa136d5c2505",
+	"prevId": "322a3ab4-44c6-4b2e-863b-4e1bc97c4741",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.auth_biometric_credentials": {
+			"name": "auth_biometric_credentials",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"userId": {
+					"name": "userId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"credentialId": {
+					"name": "credentialId",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"publicKey": {
+					"name": "publicKey",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"label": {
+					"name": "label",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"transports": {
+					"name": "transports",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"signCount": {
+					"name": "signCount",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"aaguid": {
+					"name": "aaguid",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"isBackupEligible": {
+					"name": "isBackupEligible",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"isBackupState": {
+					"name": "isBackupState",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"isUserVerified": {
+					"name": "isUserVerified",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"lastUsedAt": {
+					"name": "lastUsedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updatedAt": {
+					"name": "updatedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_biometric_credentials_userId_auth_users_id_fk": {
+					"name": "auth_biometric_credentials_userId_auth_users_id_fk",
+					"tableFrom": "auth_biometric_credentials",
+					"tableTo": "auth_users",
+					"columnsFrom": ["userId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_organization_memberships": {
+			"name": "auth_organization_memberships",
+			"schema": "",
+			"columns": {
+				"organizationId": {
+					"name": "organizationId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"userId": {
+					"name": "userId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"roleId": {
+					"name": "roleId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "auth_org_membership_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'pending'"
+				},
+				"isDefault": {
+					"name": "isDefault",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"invitedById": {
+					"name": "invitedById",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"joinedAt": {
+					"name": "joinedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updatedAt": {
+					"name": "updatedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"org_memberships_org_fk": {
+					"name": "org_memberships_org_fk",
+					"tableFrom": "auth_organization_memberships",
+					"tableTo": "auth_organizations",
+					"columnsFrom": ["organizationId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"org_memberships_user_fk": {
+					"name": "org_memberships_user_fk",
+					"tableFrom": "auth_organization_memberships",
+					"tableTo": "auth_users",
+					"columnsFrom": ["userId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"org_memberships_role_fk": {
+					"name": "org_memberships_role_fk",
+					"tableFrom": "auth_organization_memberships",
+					"tableTo": "auth_roles",
+					"columnsFrom": ["roleId"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				},
+				"org_memberships_inviter_fk": {
+					"name": "org_memberships_inviter_fk",
+					"tableFrom": "auth_organization_memberships",
+					"tableTo": "auth_users",
+					"columnsFrom": ["invitedById"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"auth_organization_memberships_organizationId_userId_pk": {
+					"name": "auth_organization_memberships_organizationId_userId_pk",
+					"columns": ["organizationId", "userId"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_organizations": {
+			"name": "auth_organizations",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"slug": {
+					"name": "slug",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"metadata": {
+					"name": "metadata",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdById": {
+					"name": "createdById",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updatedAt": {
+					"name": "updatedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_organizations_createdById_auth_users_id_fk": {
+					"name": "auth_organizations_createdById_auth_users_id_fk",
+					"tableFrom": "auth_organizations",
+					"tableTo": "auth_users",
+					"columnsFrom": ["createdById"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"auth_organizations_slug_unique": {
+					"name": "auth_organizations_slug_unique",
+					"nullsNotDistinct": false,
+					"columns": ["slug"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_permissions": {
+			"name": "auth_permissions",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"key": {
+					"name": "key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updatedAt": {
+					"name": "updatedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_role_permissions": {
+			"name": "auth_role_permissions",
+			"schema": "",
+			"columns": {
+				"roleId": {
+					"name": "roleId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"permissionId": {
+					"name": "permissionId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_role_permissions_roleId_auth_roles_id_fk": {
+					"name": "auth_role_permissions_roleId_auth_roles_id_fk",
+					"tableFrom": "auth_role_permissions",
+					"tableTo": "auth_roles",
+					"columnsFrom": ["roleId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"auth_role_permissions_permissionId_auth_permissions_id_fk": {
+					"name": "auth_role_permissions_permissionId_auth_permissions_id_fk",
+					"tableFrom": "auth_role_permissions",
+					"tableTo": "auth_permissions",
+					"columnsFrom": ["permissionId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"auth_role_permissions_roleId_permissionId_pk": {
+					"name": "auth_role_permissions_roleId_permissionId_pk",
+					"columns": ["roleId", "permissionId"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_roles": {
+			"name": "auth_roles",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"key": {
+					"name": "key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"scope": {
+					"name": "scope",
+					"type": "auth_role_scope",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'system'"
+				},
+				"organization_id": {
+					"name": "organization_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"is_default": {
+					"name": "is_default",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				}
+			},
+			"indexes": {
+				"auth_roles_key_organization_unique": {
+					"name": "auth_roles_key_organization_unique",
+					"columns": [
+						{
+							"expression": "organization_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "key",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"auth_roles_organization_id_auth_organizations_id_fk": {
+					"name": "auth_roles_organization_id_auth_organizations_id_fk",
+					"tableFrom": "auth_roles",
+					"tableTo": "auth_organizations",
+					"columnsFrom": ["organization_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_sessions": {
+			"name": "auth_sessions",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"session_token_hash": {
+					"name": "session_token_hash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"refresh_token_hash": {
+					"name": "refresh_token_hash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "auth_session_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'active'"
+				},
+				"expires_at": {
+					"name": "expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"last_active_at": {
+					"name": "last_active_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"revoked_at": {
+					"name": "revoked_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"revoked_by": {
+					"name": "revoked_by",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"ip_address": {
+					"name": "ip_address",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"user_agent": {
+					"name": "user_agent",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"device": {
+					"name": "device",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"platform": {
+					"name": "platform",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"country": {
+					"name": "country",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"city": {
+					"name": "city",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_sessions_user_id_auth_users_id_fk": {
+					"name": "auth_sessions_user_id_auth_users_id_fk",
+					"tableFrom": "auth_sessions",
+					"tableTo": "auth_users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"auth_sessions_revoked_by_auth_users_id_fk": {
+					"name": "auth_sessions_revoked_by_auth_users_id_fk",
+					"tableFrom": "auth_sessions",
+					"tableTo": "auth_users",
+					"columnsFrom": ["revoked_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_team_memberships": {
+			"name": "auth_team_memberships",
+			"schema": "",
+			"columns": {
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"teamId": {
+					"name": "teamId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"userId": {
+					"name": "userId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"roleId": {
+					"name": "roleId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"customTitle": {
+					"name": "customTitle",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "auth_team_membership_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'pending'"
+				},
+				"isManager": {
+					"name": "isManager",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"joinedAt": {
+					"name": "joinedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_team_memberships_teamId_auth_teams_id_fk": {
+					"name": "auth_team_memberships_teamId_auth_teams_id_fk",
+					"tableFrom": "auth_team_memberships",
+					"tableTo": "auth_teams",
+					"columnsFrom": ["teamId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"auth_team_memberships_userId_auth_users_id_fk": {
+					"name": "auth_team_memberships_userId_auth_users_id_fk",
+					"tableFrom": "auth_team_memberships",
+					"tableTo": "auth_users",
+					"columnsFrom": ["userId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"auth_team_memberships_roleId_auth_roles_id_fk": {
+					"name": "auth_team_memberships_roleId_auth_roles_id_fk",
+					"tableFrom": "auth_team_memberships",
+					"tableTo": "auth_roles",
+					"columnsFrom": ["roleId"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"auth_team_memberships_teamId_userId_pk": {
+					"name": "auth_team_memberships_teamId_userId_pk",
+					"columns": ["teamId", "userId"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_teams": {
+			"name": "auth_teams",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"organizationId": {
+					"name": "organizationId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"parentTeamId": {
+					"name": "parentTeamId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"slug": {
+					"name": "slug",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"stripe_customer_id": {
+					"name": "stripe_customer_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"stripe_subscription_id": {
+					"name": "stripe_subscription_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"stripe_product_id": {
+					"name": "stripe_product_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"plan_name": {
+					"name": "plan_name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"subscription_status": {
+					"name": "subscription_status",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_teams_organizationId_auth_organizations_id_fk": {
+					"name": "auth_teams_organizationId_auth_organizations_id_fk",
+					"tableFrom": "auth_teams",
+					"tableTo": "auth_organizations",
+					"columnsFrom": ["organizationId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"auth_teams_slug_unique": {
+					"name": "auth_teams_slug_unique",
+					"nullsNotDistinct": false,
+					"columns": ["slug"]
+				},
+				"auth_teams_stripe_customer_id_unique": {
+					"name": "auth_teams_stripe_customer_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["stripe_customer_id"]
+				},
+				"auth_teams_stripe_subscription_id_unique": {
+					"name": "auth_teams_stripe_subscription_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["stripe_subscription_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_user_credentials": {
+			"name": "auth_user_credentials",
+			"schema": "",
+			"columns": {
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"passwordHash": {
+					"name": "passwordHash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"passwordSalt": {
+					"name": "passwordSalt",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"expiresAt": {
+					"name": "expiresAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"mustChangePassword": {
+					"name": "mustChangePassword",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"lastChangedAt": {
+					"name": "lastChangedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_user_oauth_accounts": {
+			"name": "auth_user_oauth_accounts",
+			"schema": "",
+			"columns": {
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"provider": {
+					"name": "provider",
+					"type": "auth_oauth_provider",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"providerAccountId": {
+					"name": "providerAccountId",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"displayName": {
+					"name": "displayName",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"profileUrl": {
+					"name": "profileUrl",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"accessToken": {
+					"name": "accessToken",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"refreshToken": {
+					"name": "refreshToken",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"scopes": {
+					"name": "scopes",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"expiresAt": {
+					"name": "expiresAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_user_oauth_accounts_user_id_auth_users_id_fk": {
+					"name": "auth_user_oauth_accounts_user_id_auth_users_id_fk",
+					"tableFrom": "auth_user_oauth_accounts",
+					"tableTo": "auth_users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"auth_user_oauth_accounts_providerAccountId_provider_pk": {
+					"name": "auth_user_oauth_accounts_providerAccountId_provider_pk",
+					"columns": ["providerAccountId", "provider"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_user_role_assignments": {
+			"name": "auth_user_role_assignments",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"roleId": {
+					"name": "roleId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"organizationId": {
+					"name": "organizationId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"teamId": {
+					"name": "teamId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"assignedById": {
+					"name": "assignedById",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"assignedAt": {
+					"name": "assignedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"auth_user_role_assignments_unique": {
+					"name": "auth_user_role_assignments_unique",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "roleId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "organizationId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "teamId",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"auth_user_role_assignments_user_id_auth_users_id_fk": {
+					"name": "auth_user_role_assignments_user_id_auth_users_id_fk",
+					"tableFrom": "auth_user_role_assignments",
+					"tableTo": "auth_users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"user_role_assignments_role_fk": {
+					"name": "user_role_assignments_role_fk",
+					"tableFrom": "auth_user_role_assignments",
+					"tableTo": "auth_roles",
+					"columnsFrom": ["roleId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"user_role_assignments_user_fk": {
+					"name": "user_role_assignments_user_fk",
+					"tableFrom": "auth_user_role_assignments",
+					"tableTo": "auth_users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"user_role_assignments_org_fk": {
+					"name": "user_role_assignments_org_fk",
+					"tableFrom": "auth_user_role_assignments",
+					"tableTo": "auth_organizations",
+					"columnsFrom": ["organizationId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"user_role_assignments_team_fk": {
+					"name": "user_role_assignments_team_fk",
+					"tableFrom": "auth_user_role_assignments",
+					"tableTo": "auth_teams",
+					"columnsFrom": ["teamId"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"user_role_assignments_assigned_by_fk": {
+					"name": "user_role_assignments_assigned_by_fk",
+					"tableFrom": "auth_user_role_assignments",
+					"tableTo": "auth_users",
+					"columnsFrom": ["assignedById"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_user_tokens": {
+			"name": "auth_user_tokens",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"tokenHash": {
+					"name": "tokenHash",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "auth_user_token_type",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"expiresAt": {
+					"name": "expiresAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"consumedAt": {
+					"name": "consumedAt",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"metadata": {
+					"name": "metadata",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'null'::jsonb"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"auth_user_tokens_user_id_auth_users_id_fk": {
+					"name": "auth_user_tokens_user_id_auth_users_id_fk",
+					"tableFrom": "auth_user_tokens",
+					"tableTo": "auth_users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"auth_user_tokens_tokenHash_unique": {
+					"name": "auth_user_tokens_tokenHash_unique",
+					"nullsNotDistinct": false,
+					"columns": ["tokenHash"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.auth_users": {
+			"name": "auth_users",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"email_normalized": {
+					"name": "email_normalized",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"display_name": {
+					"name": "display_name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"given_name": {
+					"name": "given_name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"family_name": {
+					"name": "family_name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"avatar_url": {
+					"name": "avatar_url",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"locale": {
+					"name": "locale",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"timezone": {
+					"name": "timezone",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "auth_user_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'active'"
+				},
+				"email_verified_at": {
+					"name": "email_verified_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"last_sign_in_at": {
+					"name": "last_sign_in_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"auth_users_email_normalized_unique": {
+					"name": "auth_users_email_normalized_unique",
+					"columns": [
+						{
+							"expression": "email_normalized",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.saas_activity_logs": {
+			"name": "saas_activity_logs",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"team_id": {
+					"name": "team_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"action": {
+					"name": "action",
+					"type": "saas_activity_type",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"timestamp": {
+					"name": "timestamp",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"ip_address": {
+					"name": "ip_address",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"saas_activity_logs_team_id_auth_teams_id_fk": {
+					"name": "saas_activity_logs_team_id_auth_teams_id_fk",
+					"tableFrom": "saas_activity_logs",
+					"tableTo": "auth_teams",
+					"columnsFrom": ["team_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"saas_activity_logs_user_id_auth_users_id_fk": {
+					"name": "saas_activity_logs_user_id_auth_users_id_fk",
+					"tableFrom": "saas_activity_logs",
+					"tableTo": "auth_users",
+					"columnsFrom": ["user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.saas_invitations": {
+			"name": "saas_invitations",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"team_id": {
+					"name": "team_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"role_key": {
+					"name": "role_key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"invited_by_user_id": {
+					"name": "invited_by_user_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"status": {
+					"name": "status",
+					"type": "saas_invitation_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'pending'"
+				},
+				"token": {
+					"name": "token",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"accepted_at": {
+					"name": "accepted_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"saas_invitations_team_id_auth_teams_id_fk": {
+					"name": "saas_invitations_team_id_auth_teams_id_fk",
+					"tableFrom": "saas_invitations",
+					"tableTo": "auth_teams",
+					"columnsFrom": ["team_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"saas_invitations_invited_by_user_id_auth_users_id_fk": {
+					"name": "saas_invitations_invited_by_user_id_auth_users_id_fk",
+					"tableFrom": "saas_invitations",
+					"tableTo": "auth_users",
+					"columnsFrom": ["invited_by_user_id"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"saas_invitations_token_unique": {
+					"name": "saas_invitations_token_unique",
+					"nullsNotDistinct": false,
+					"columns": ["token"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {
+		"public.auth_org_membership_status": {
+			"name": "auth_org_membership_status",
+			"schema": "public",
+			"values": ["pending", "active", "inactive"]
+		},
+		"public.auth_role_scope": {
+			"name": "auth_role_scope",
+			"schema": "public",
+			"values": ["system", "organization", "team"]
+		},
+		"public.auth_session_status": {
+			"name": "auth_session_status",
+			"schema": "public",
+			"values": ["active", "revoked", "expired"]
+		},
+		"public.auth_team_membership_status": {
+			"name": "auth_team_membership_status",
+			"schema": "public",
+			"values": ["pending", "active", "inactive"]
+		},
+		"public.auth_oauth_provider": {
+			"name": "auth_oauth_provider",
+			"schema": "public",
+			"values": ["google", "github", "microsoft", "apple"]
+		},
+		"public.auth_user_token_type": {
+			"name": "auth_user_token_type",
+			"schema": "public",
+			"values": [
+				"email_verification",
+				"password_reset",
+				"magic_link",
+				"otp",
+				"device_trust"
+			]
+		},
+		"public.auth_user_status": {
+			"name": "auth_user_status",
+			"schema": "public",
+			"values": ["active", "invited", "inactive", "suspended"]
+		},
+		"public.saas_activity_type": {
+			"name": "saas_activity_type",
+			"schema": "public",
+			"values": [
+				"SIGN_UP",
+				"SIGN_IN",
+				"SIGN_OUT",
+				"UPDATE_PASSWORD",
+				"DELETE_ACCOUNT",
+				"UPDATE_ACCOUNT",
+				"CREATE_TEAM",
+				"REMOVE_TEAM_MEMBER",
+				"INVITE_TEAM_MEMBER",
+				"ACCEPT_INVITATION"
+			]
+		},
+		"public.saas_invitation_status": {
+			"name": "saas_invitation_status",
+			"schema": "public",
+			"values": ["pending", "accepted", "revoked"]
+		}
+	},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": { "columns": {}, "schemas": {}, "tables": {} }
 }

@@ -31,10 +31,8 @@ import {
 	UserTokensTable,
 } from "@/auth/tables";
 import { db } from "@/drizzle/db";
+import { getT } from "@/lib/i18n/actions";
 import { slugify } from "@/lib/utils";
-import { getCurrentUser } from "../currentUser";
-import { sendEmailVerificationEmail } from "../emails/emailVerification";
-import { defaultRoleTemplates } from "./authorizationDefaults";
 import {
 	canCreateTeamFromMembership,
 	canManageTeamMembersFromMemberships,
@@ -44,7 +42,10 @@ import {
 	type PermissionDefinition,
 	type PermissionKey,
 	permissionDefinitions,
-} from "./permissions";
+} from "../../config/permissions";
+import { getCurrentUser } from "../currentUser";
+import { sendEmailVerificationEmail } from "../emails/emailVerification";
+import { defaultRoleTemplates } from "./authorizationDefaults";
 import {
 	type AddTeamMemberInput,
 	addTeamMemberSchema,
@@ -73,6 +74,21 @@ import {
 	updateRoleSchema,
 } from "./schemas";
 import type { AuthorizationRoleSummary, PermissionCatalogGroup } from "./types";
+
+type Translator = (
+	key: string,
+	fallback: string,
+	args?: Record<string, unknown>,
+) => string;
+
+async function getTranslator(): Promise<Translator> {
+	const { t } = await getT();
+
+	return (key, fallback, args) => {
+		const value = t(key as any, args as any);
+		return value === key ? fallback : value;
+	};
+}
 
 type OrganizationTeamSummary = {
 	id: string;
@@ -166,11 +182,11 @@ async function canManageTeam(
 	});
 }
 
-function validationError(error: z.ZodError) {
+function validationError(error: z.ZodError, tr: Translator) {
 	const flat = error.flatten();
 	return {
 		success: false as const,
-		message: flat.formErrors[0] ?? "Invalid input",
+		message: flat.formErrors[0] ?? tr("errors.validation", "Invalid input"),
 		fieldErrors: flat.fieldErrors as Record<string, string[]>,
 	};
 }
@@ -257,9 +273,9 @@ async function ensureOrganizationAuthorization(
 
 		const permissionRows = templatePermissionKeys.length
 			? await trx
-					.select({ id: PermissionsTable.id, key: PermissionsTable.key })
-					.from(PermissionsTable)
-					.where(inArray(PermissionsTable.key, templatePermissionKeys))
+				.select({ id: PermissionsTable.id, key: PermissionsTable.key })
+				.from(PermissionsTable)
+				.where(inArray(PermissionsTable.key, templatePermissionKeys))
 			: [];
 
 		const permissionIdByKey = new Map(
@@ -520,9 +536,10 @@ async function generateUniqueTeamSlug(organizationId: string, name: string) {
 }
 
 export async function createOrganization(input: CreateOrganizationInput) {
+	const tr = await getTranslator();
 	const parsed = createOrganizationSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -613,7 +630,13 @@ export async function createOrganization(input: CreateOrganizationInput) {
 		});
 	} catch (error) {
 		console.error(error);
-		return { success: false as const, message: "Unable to create organization" };
+		return {
+			success: false as const,
+			message: tr(
+				"org.actions.createOrganization.error",
+				"Unable to create organization",
+			),
+		};
 	}
 
 	if (newOrganizationId) {
@@ -628,16 +651,26 @@ export async function createOrganization(input: CreateOrganizationInput) {
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Organization created" };
+	return {
+		success: true as const,
+		message: tr(
+			"org.actions.createOrganization.success",
+			"Organization created",
+		),
+	};
 }
 
 export async function deleteOrganization(organizationId: string) {
+	const tr = await getTranslator();
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
 
 	if (!(await isOrgOwner(currentUser.id, organizationId))) {
 		return {
 			success: false as const,
-			message: "Only organization owners can delete the organization",
+			message: tr(
+				"org.actions.deleteOrganization.ownerOnly",
+				"Only organization owners can delete the organization",
+			),
 		};
 	}
 
@@ -672,13 +705,20 @@ export async function deleteOrganization(organizationId: string) {
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Organization deleted" };
+	return {
+		success: true as const,
+		message: tr(
+			"org.actions.deleteOrganization.success",
+			"Organization deleted",
+		),
+	};
 }
 
 export async function setActiveOrganization(organizationId: string) {
+	const tr = await getTranslator();
 	const parsed = setActiveOrganizationSchema.safeParse({ organizationId });
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -694,7 +734,10 @@ export async function setActiveOrganization(organizationId: string) {
 	if (!membership) {
 		return {
 			success: false as const,
-			message: "You do not belong to that organization",
+			message: tr(
+				"org.actions.membership.notMember",
+				"You do not belong to that organization",
+			),
 		};
 	}
 
@@ -720,7 +763,13 @@ export async function setActiveOrganization(organizationId: string) {
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Organization selected" };
+	return {
+		success: true as const,
+		message: tr(
+			"org.actions.setActiveOrganization.success",
+			"Organization selected",
+		),
+	};
 }
 
 export async function getUserOrganizations() {
@@ -755,9 +804,10 @@ export async function getActiveOrganization() {
 }
 
 export async function createTeam(input: CreateTeamInput) {
+	const tr = await getTranslator();
 	const parsed = createTeamSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -770,14 +820,20 @@ export async function createTeam(input: CreateTeamInput) {
 	if (!membership) {
 		return {
 			success: false as const,
-			message: "You do not have access to that organization",
+			message: tr(
+				"org.actions.common.noOrgAccess",
+				"You do not have access to that organization",
+			),
 		};
 	}
 
 	if (!canCreateTeamFromMembership(membership)) {
 		return {
 			success: false as const,
-			message: "Only organization owners can create teams",
+			message: tr(
+				"org.actions.teams.ownerOnly",
+				"Only organization owners can create teams",
+			),
 		};
 	}
 
@@ -798,12 +854,21 @@ export async function createTeam(input: CreateTeamInput) {
 			});
 	} catch (error) {
 		console.error(error);
-		return { success: false as const, message: "Unable to create team" };
+		return {
+			success: false as const,
+			message: tr(
+				"org.actions.teams.create.error",
+				"Unable to create team",
+			),
+		};
 	}
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Team created" };
+	return {
+		success: true as const,
+		message: tr("org.actions.teams.create.success", "Team created"),
+	};
 }
 
 type SearchTeamInviteesSuccess = {
@@ -822,9 +887,12 @@ type SearchTeamInviteesFailure = { success: false; error: string };
 export async function searchTeamInvitees(
 	input: SearchTeamInviteesInput,
 ): Promise<SearchTeamInviteesSuccess | SearchTeamInviteesFailure> {
+	const tr = await getTranslator();
 	const parsed = searchTeamInviteesSchema.safeParse(input);
 	if (!parsed.success) {
-		const message = parsed.error.issues[0]?.message ?? "Invalid search input";
+		const message =
+			parsed.error.issues[0]?.message ??
+			tr("org.actions.search.invalidInput", "Invalid search input");
 		return { success: false, error: message };
 	}
 
@@ -836,7 +904,10 @@ export async function searchTeamInvitees(
 	});
 
 	if (!team) {
-		return { success: false, error: "Team not found" };
+		return {
+			success: false,
+			error: tr("org.actions.teams.notFound", "Team not found"),
+		};
 	}
 
 	const canManage = await canManageTeam(
@@ -848,7 +919,10 @@ export async function searchTeamInvitees(
 	if (!canManage) {
 		return {
 			success: false,
-			error: "You need to be an organization owner or team manager",
+			error: tr(
+				"org.actions.members.ownerOrManagerRequired",
+				"You need to be an organization owner or team manager",
+			),
 		};
 	}
 
@@ -913,9 +987,10 @@ export async function searchTeamInvitees(
 }
 
 export async function addTeamMember(input: AddTeamMemberInput) {
+	const tr = await getTranslator();
 	const parsed = addTeamMemberSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -925,7 +1000,10 @@ export async function addTeamMember(input: AddTeamMemberInput) {
 	});
 
 	if (!team) {
-		return { success: false as const, message: "Team not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.teams.notFound", "Team not found"),
+		};
 	}
 
 	await ensureOrganizationAuthorization(team.organizationId);
@@ -944,7 +1022,10 @@ export async function addTeamMember(input: AddTeamMemberInput) {
 		) {
 			return {
 				success: false as const,
-				message: "Selected role is not valid for this team",
+				message: tr(
+					"org.actions.members.invalidTeamRole",
+					"Selected role is not valid for this team",
+				),
 			};
 		}
 	} else {
@@ -964,7 +1045,10 @@ export async function addTeamMember(input: AddTeamMemberInput) {
 	if (!membership) {
 		return {
 			success: false as const,
-			message: "You do not have access to that organization",
+			message: tr(
+				"org.actions.common.noOrgAccess",
+				"You do not have access to that organization",
+			),
 		};
 	}
 
@@ -977,7 +1061,10 @@ export async function addTeamMember(input: AddTeamMemberInput) {
 	) {
 		return {
 			success: false as const,
-			message: "You need to be an organization owner or team manager",
+			message: tr(
+				"org.actions.members.ownerOrManagerRequired",
+				"You need to be an organization owner or team manager",
+			),
 		};
 	}
 
@@ -1025,7 +1112,10 @@ export async function addTeamMember(input: AddTeamMemberInput) {
 			console.error("Failed to create invited user", error);
 			return {
 				success: false as const,
-				message: "Unable to create a new user for that email",
+				message: tr(
+					"org.actions.members.createUserError",
+					"Unable to create a new user for that email",
+				),
 			};
 		}
 	} else {
@@ -1039,7 +1129,10 @@ export async function addTeamMember(input: AddTeamMemberInput) {
 	if (!user) {
 		return {
 			success: false as const,
-			message: "No account found for that email",
+			message: tr(
+				"org.actions.members.noAccount",
+				"No account found for that email",
+			),
 		};
 	}
 
@@ -1117,22 +1210,34 @@ export async function addTeamMember(input: AddTeamMemberInput) {
 
 	revalidatePath("/");
 
-	let successMessage = "Member added to team";
+	let successMessageKey = "org.actions.members.add.success";
+	let successReplacements: Record<string, string> | undefined;
+	let successFallback = "Member added to team";
 
 	if (createdNewUser) {
 		if (onboardingResult?.kind === "verification") {
-			successMessage = `Member invited. Verification email sent to ${email}.`;
+			successMessageKey = "org.actions.members.add.invited";
+			successFallback = "Member invited. Verification email sent to {email}.";
+			successReplacements = { email };
 		} else if (onboardingResult?.kind === "password") {
-			successMessage = `Member added. Share this temporary password with them: ${onboardingResult.password}`;
+			successMessageKey = "org.actions.members.add.tempPassword";
+			successFallback =
+				"Member added. Share this temporary password with them: {password}";
+			successReplacements = { password: onboardingResult.password };
 		}
 	} else if (input.isNew) {
-		successMessage = "Existing account found and added to the team";
+		successMessageKey = "org.actions.members.add.existing";
+		successFallback = "Existing account found and added to the team";
 	}
 
-	return { success: true as const, message: successMessage };
+	return {
+		success: true as const,
+		message: tr(successMessageKey, successFallback, successReplacements),
+	};
 }
 
 export async function removeTeamMember(teamId: string, userId: string) {
+	const tr = await getTranslator();
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
 
 	const team = await db.query.TeamsTable.findFirst({
@@ -1141,7 +1246,10 @@ export async function removeTeamMember(teamId: string, userId: string) {
 	});
 
 	if (!team) {
-		return { success: false as const, message: "Team not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.teams.notFound", "Team not found"),
+		};
 	}
 
 	const membership = await getActiveOrgMembershipWithRole(
@@ -1152,14 +1260,20 @@ export async function removeTeamMember(teamId: string, userId: string) {
 	if (!membership) {
 		return {
 			success: false as const,
-			message: "You do not have access to that organization",
+			message: tr(
+				"org.actions.common.noOrgAccess",
+				"You do not have access to that organization",
+			),
 		};
 	}
 
 	if (!(await canManageTeam(currentUser.id, teamId, team.organizationId))) {
 		return {
 			success: false as const,
-			message: "You need to be an organization owner or team manager",
+			message: tr(
+				"org.actions.members.ownerOrManagerRequired",
+				"You need to be an organization owner or team manager",
+			),
 		};
 	}
 
@@ -1174,13 +1288,17 @@ export async function removeTeamMember(teamId: string, userId: string) {
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Member removed" };
+	return {
+		success: true as const,
+		message: tr("org.actions.members.remove.success", "Member removed"),
+	};
 }
 
 export async function setTeamMemberManager(input: SetTeamMemberManagerInput) {
+	const tr = await getTranslator();
 	const parsed = setTeamMemberManagerSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1191,7 +1309,10 @@ export async function setTeamMemberManager(input: SetTeamMemberManagerInput) {
 	});
 
 	if (!team) {
-		return { success: false as const, message: "Team not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.teams.notFound", "Team not found"),
+		};
 	}
 
 	const membership = await db.query.OrganizationMembershipsTable.findFirst({
@@ -1206,7 +1327,10 @@ export async function setTeamMemberManager(input: SetTeamMemberManagerInput) {
 	if (!membership) {
 		return {
 			success: false as const,
-			message: "You do not have access to that organization",
+			message: tr(
+				"org.actions.common.noOrgAccess",
+				"You do not have access to that organization",
+			),
 		};
 	}
 
@@ -1219,7 +1343,10 @@ export async function setTeamMemberManager(input: SetTeamMemberManagerInput) {
 	) {
 		return {
 			success: false as const,
-			message: "You need to be an organization owner or team manager",
+			message: tr(
+				"org.actions.members.ownerOrManagerRequired",
+				"You need to be an organization owner or team manager",
+			),
 		};
 	}
 
@@ -1232,13 +1359,22 @@ export async function setTeamMemberManager(input: SetTeamMemberManagerInput) {
 	});
 
 	if (!teamMembership) {
-		return { success: false as const, message: "Member not found on that team" };
+		return {
+			success: false as const,
+			message: tr(
+				"org.actions.members.notFoundOnTeam",
+				"Member not found on that team",
+			),
+		};
 	}
 
 	if (teamMembership.status !== "active") {
 		return {
 			success: false as const,
-			message: "Only active members can be updated",
+			message: tr(
+				"org.actions.members.activeOnly",
+				"Only active members can be updated",
+			),
 		};
 	}
 
@@ -1257,15 +1393,19 @@ export async function setTeamMemberManager(input: SetTeamMemberManagerInput) {
 	return {
 		success: true as const,
 		message: parsed.data.isManager
-			? "Member promoted to manager"
-			: "Manager role removed",
+			? tr(
+				"org.actions.members.manager.promoted",
+				"Member promoted to manager",
+			)
+			: tr("org.actions.members.manager.removed", "Manager role removed"),
 	};
 }
 
 export async function setTeamMemberRole(input: SetTeamMemberRoleInput) {
+	const tr = await getTranslator();
 	const parsed = setTeamMemberRoleSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1276,7 +1416,10 @@ export async function setTeamMemberRole(input: SetTeamMemberRoleInput) {
 	});
 
 	if (!team) {
-		return { success: false as const, message: "Team not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.teams.notFound", "Team not found"),
+		};
 	}
 
 	const membership = await getActiveOrgMembershipWithRole(
@@ -1287,7 +1430,10 @@ export async function setTeamMemberRole(input: SetTeamMemberRoleInput) {
 	if (!membership) {
 		return {
 			success: false as const,
-			message: "You do not have access to that organization",
+			message: tr(
+				"org.actions.common.noOrgAccess",
+				"You do not have access to that organization",
+			),
 		};
 	}
 
@@ -1300,7 +1446,10 @@ export async function setTeamMemberRole(input: SetTeamMemberRoleInput) {
 	) {
 		return {
 			success: false as const,
-			message: "You need to be an organization owner or team manager",
+			message: tr(
+				"org.actions.members.ownerOrManagerRequired",
+				"You need to be an organization owner or team manager",
+			),
 		};
 	}
 
@@ -1319,7 +1468,10 @@ export async function setTeamMemberRole(input: SetTeamMemberRoleInput) {
 		) {
 			return {
 				success: false as const,
-				message: "Selected role is not valid for this team",
+				message: tr(
+					"org.actions.members.invalidTeamRole",
+					"Selected role is not valid for this team",
+				),
 			};
 		}
 	}
@@ -1333,13 +1485,22 @@ export async function setTeamMemberRole(input: SetTeamMemberRoleInput) {
 	});
 
 	if (!teamMembership) {
-		return { success: false as const, message: "Member not found on that team" };
+		return {
+			success: false as const,
+			message: tr(
+				"org.actions.members.notFoundOnTeam",
+				"Member not found on that team",
+			),
+		};
 	}
 
 	if (teamMembership.status !== "active") {
 		return {
 			success: false as const,
-			message: "Only active members can be updated",
+			message: tr(
+				"org.actions.members.activeOnly",
+				"Only active members can be updated",
+			),
 		};
 	}
 
@@ -1357,7 +1518,9 @@ export async function setTeamMemberRole(input: SetTeamMemberRoleInput) {
 
 	return {
 		success: true as const,
-		message: targetRoleId ? "Member role updated" : "Member role cleared",
+		message: targetRoleId
+			? tr("org.actions.members.role.updated", "Member role updated")
+			: tr("org.actions.members.role.cleared", "Member role cleared"),
 	};
 }
 
@@ -1651,9 +1814,10 @@ export async function getOrganizationAuthorization(organizationId: string) {
 }
 
 export async function createRole(input: CreateRoleInput) {
+	const tr = await getTranslator();
 	const parsed = createRoleSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1666,7 +1830,10 @@ export async function createRole(input: CreateRoleInput) {
 	if (!isOwnerMembership(membership)) {
 		return {
 			success: false as const,
-			message: "Only organization owners can manage roles",
+			message: tr(
+				"org.actions.roles.ownerOnly",
+				"Only organization owners can manage roles",
+			),
 		};
 	}
 
@@ -1704,7 +1871,13 @@ export async function createRole(input: CreateRoleInput) {
 		.returning({ id: RolesTable.id, scope: RolesTable.scope });
 
 	if (!created) {
-		return { success: false as const, message: "Unable to create role" };
+		return {
+			success: false as const,
+			message: tr(
+				"org.actions.roles.create.error",
+				"Unable to create role",
+			),
+		};
 	}
 
 	if (shouldSetDefault) {
@@ -1723,13 +1896,17 @@ export async function createRole(input: CreateRoleInput) {
 	await ensureOrganizationAuthorization(parsed.data.organizationId);
 	revalidatePath("/");
 
-	return { success: true as const, message: "Role created" };
+	return {
+		success: true as const,
+		message: tr("org.actions.roles.create.success", "Role created"),
+	};
 }
 
 export async function updateRole(input: UpdateRoleInput) {
+	const tr = await getTranslator();
 	const parsed = updateRoleSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1742,7 +1919,10 @@ export async function updateRole(input: UpdateRoleInput) {
 	if (!isOwnerMembership(membership)) {
 		return {
 			success: false as const,
-			message: "Only organization owners can manage roles",
+			message: tr(
+				"org.actions.roles.ownerOnly",
+				"Only organization owners can manage roles",
+			),
 		};
 	}
 
@@ -1752,7 +1932,10 @@ export async function updateRole(input: UpdateRoleInput) {
 	});
 
 	if (!role || role.organizationId !== parsed.data.organizationId) {
-		return { success: false as const, message: "Role not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.roles.notFound", "Role not found"),
+		};
 	}
 
 	await db
@@ -1765,13 +1948,17 @@ export async function updateRole(input: UpdateRoleInput) {
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Role updated" };
+	return {
+		success: true as const,
+		message: tr("org.actions.roles.update.success", "Role updated"),
+	};
 }
 
 export async function deleteRole(input: DeleteRoleInput) {
+	const tr = await getTranslator();
 	const parsed = deleteRoleSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1784,7 +1971,10 @@ export async function deleteRole(input: DeleteRoleInput) {
 	if (!isOwnerMembership(membership)) {
 		return {
 			success: false as const,
-			message: "Only organization owners can manage roles",
+			message: tr(
+				"org.actions.roles.ownerOnly",
+				"Only organization owners can manage roles",
+			),
 		};
 	}
 
@@ -1800,20 +1990,29 @@ export async function deleteRole(input: DeleteRoleInput) {
 	});
 
 	if (!role || role.organizationId !== parsed.data.organizationId) {
-		return { success: false as const, message: "Role not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.roles.notFound", "Role not found"),
+		};
 	}
 
 	if (role.key === OWNER_ROLE_KEY) {
 		return {
 			success: false as const,
-			message: "The owner role cannot be deleted",
+			message: tr(
+				"org.actions.roles.delete.ownerRole",
+				"The owner role cannot be deleted",
+			),
 		};
 	}
 
 	if (role.isDefault) {
 		return {
 			success: false as const,
-			message: "Unset the default role before deleting it",
+			message: tr(
+				"org.actions.roles.delete.defaultUnset",
+				"Unset the default role before deleting it",
+			),
 		};
 	}
 
@@ -1829,7 +2028,10 @@ export async function deleteRole(input: DeleteRoleInput) {
 		if (assignments) {
 			return {
 				success: false as const,
-				message: "Remove or reassign members before deleting this role",
+				message: tr(
+					"org.actions.roles.delete.assignments",
+					"Remove or reassign members before deleting this role",
+				),
 			};
 		}
 	} else {
@@ -1841,7 +2043,10 @@ export async function deleteRole(input: DeleteRoleInput) {
 		if (assignments) {
 			return {
 				success: false as const,
-				message: "Remove or reassign members before deleting this role",
+				message: tr(
+					"org.actions.roles.delete.assignments",
+					"Remove or reassign members before deleting this role",
+				),
 			};
 		}
 	}
@@ -1849,13 +2054,17 @@ export async function deleteRole(input: DeleteRoleInput) {
 	await db.delete(RolesTable).where(eq(RolesTable.id, role.id));
 	revalidatePath("/");
 
-	return { success: true as const, message: "Role deleted" };
+	return {
+		success: true as const,
+		message: tr("org.actions.roles.delete.success", "Role deleted"),
+	};
 }
 
 export async function setRolePermissions(input: SetRolePermissionsInput) {
+	const tr = await getTranslator();
 	const parsed = setRolePermissionsSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1868,7 +2077,10 @@ export async function setRolePermissions(input: SetRolePermissionsInput) {
 	if (!isOwnerMembership(membership)) {
 		return {
 			success: false as const,
-			message: "Only organization owners can manage roles",
+			message: tr(
+				"org.actions.roles.ownerOnly",
+				"Only organization owners can manage roles",
+			),
 		};
 	}
 
@@ -1878,14 +2090,17 @@ export async function setRolePermissions(input: SetRolePermissionsInput) {
 	});
 
 	if (!role || role.organizationId !== parsed.data.organizationId) {
-		return { success: false as const, message: "Role not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.roles.notFound", "Role not found"),
+		};
 	}
 
 	const permissionRows = parsed.data.permissionKeys.length
 		? await db
-				.select({ id: PermissionsTable.id, key: PermissionsTable.key })
-				.from(PermissionsTable)
-				.where(inArray(PermissionsTable.key, parsed.data.permissionKeys))
+			.select({ id: PermissionsTable.id, key: PermissionsTable.key })
+			.from(PermissionsTable)
+			.where(inArray(PermissionsTable.key, parsed.data.permissionKeys))
 		: [];
 
 	const permissionIdByKey = new Map(
@@ -1908,13 +2123,20 @@ export async function setRolePermissions(input: SetRolePermissionsInput) {
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Role permissions updated" };
+	return {
+		success: true as const,
+		message: tr(
+			"org.actions.roles.permissions.success",
+			"Role permissions updated",
+		),
+	};
 }
 
 export async function setRoleDefault(input: SetRoleDefaultInput) {
+	const tr = await getTranslator();
 	const parsed = setRoleDefaultSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1927,7 +2149,10 @@ export async function setRoleDefault(input: SetRoleDefaultInput) {
 	if (!isOwnerMembership(membership)) {
 		return {
 			success: false as const,
-			message: "Only organization owners can manage roles",
+			message: tr(
+				"org.actions.roles.ownerOnly",
+				"Only organization owners can manage roles",
+			),
 		};
 	}
 
@@ -1937,7 +2162,10 @@ export async function setRoleDefault(input: SetRoleDefaultInput) {
 	});
 
 	if (!role || role.organizationId !== parsed.data.organizationId) {
-		return { success: false as const, message: "Role not found" };
+		return {
+			success: false as const,
+			message: tr("org.actions.roles.notFound", "Role not found"),
+		};
 	}
 
 	await db
@@ -1957,15 +2185,22 @@ export async function setRoleDefault(input: SetRoleDefaultInput) {
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Default role updated" };
+	return {
+		success: true as const,
+		message: tr(
+			"org.actions.roles.default.success",
+			"Default role updated",
+		),
+	};
 }
 
 export async function syncOrganizationAuthorization(
 	input: SyncAuthorizationInput,
 ) {
+	const tr = await getTranslator();
 	const parsed = syncAuthorizationSchema.safeParse(input);
 	if (!parsed.success) {
-		return validationError(parsed.error);
+		return validationError(parsed.error, tr);
 	}
 
 	const currentUser = await getCurrentUser({ redirectIfNotFound: true });
@@ -1978,7 +2213,10 @@ export async function syncOrganizationAuthorization(
 	if (!isOwnerMembership(membership)) {
 		return {
 			success: false as const,
-			message: "Only organization owners can manage roles",
+			message: tr(
+				"org.actions.roles.ownerOnly",
+				"Only organization owners can manage roles",
+			),
 		};
 	}
 
@@ -1988,7 +2226,13 @@ export async function syncOrganizationAuthorization(
 
 	revalidatePath("/");
 
-	return { success: true as const, message: "Authorization defaults synced" };
+	return {
+		success: true as const,
+		message: tr(
+			"org.actions.authorization.sync.success",
+			"Authorization defaults synced",
+		),
+	};
 }
 
 type OnboardingOutcome =

@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { authMessage } from "@/auth/config";
 import { resetPassword } from "@/auth/features/password/server/actions";
 import { passwordResetSubmissionSchema } from "@/auth/features/password/server/schemas";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ import {
 	InputOTPGroup,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type FormValues = z.infer<typeof passwordResetSubmissionSchema>;
 
@@ -32,6 +32,7 @@ export function ResetPasswordForm({
 }: {
 	initialEmail?: string;
 }) {
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<null | {
 		status: "success" | "error";
 		message: string;
@@ -71,7 +72,7 @@ export function ResetPasswordForm({
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{authMessage("passwordReset.emailLabel", "Email")}</FormLabel>
+							<FormLabel>{t("passwordReset.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -85,7 +86,7 @@ export function ResetPasswordForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("passwordReset.otpLabel", "Verification code")}
+								{t("passwordReset.otpLabel")}
 							</FormLabel>
 							<FormControl>
 								<InputOTP
@@ -102,10 +103,7 @@ export function ResetPasswordForm({
 								</InputOTP>
 							</FormControl>
 							<p className="text-xs text-muted-foreground">
-								{authMessage(
-									"passwordReset.otpHelp",
-									"Enter the 6-digit code sent to your email.",
-								)}
+								{t("passwordReset.otpHelp")}
 							</p>
 							<FormMessage />
 						</FormItem>
@@ -117,7 +115,7 @@ export function ResetPasswordForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("passwordReset.newPasswordLabel", "New password")}
+								{t("passwordReset.newPasswordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="new-password" {...field} />
@@ -129,13 +127,13 @@ export function ResetPasswordForm({
 				<div className="flex justify-between">
 					<Button asChild variant="link">
 						<Link href="/sign-in">
-							{authMessage("passwordReset.backToSignIn", "Back to sign in")}
+							{t("passwordReset.backToSignIn")}
 						</Link>
 					</Button>
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? authMessage("passwordReset.reset.submitting", "Updating...")
-							: authMessage("passwordReset.reset.submit", "Update password")}
+							? t("passwordReset.reset.submitting")
+							: t("passwordReset.reset.submit")}
 					</Button>
 				</div>
 			</form>

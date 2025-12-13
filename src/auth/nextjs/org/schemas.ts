@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PERMISSION_KEYS } from "./permissions";
+import { PERMISSION_KEYS } from "../../config/permissions";
 
 export const createOrganizationSchema = z.object({
 	name: z

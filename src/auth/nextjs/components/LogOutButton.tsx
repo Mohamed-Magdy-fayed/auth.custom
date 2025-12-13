@@ -1,9 +1,9 @@
 "use client";
 
 import { type ButtonHTMLAttributes, type ReactNode, useState } from "react";
-import { authMessage } from "@/auth/config";
 import { Button } from "@/components/ui/button";
 import { LoadingSwap } from "@/components/ui/loading-swap";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { logOut } from "../actions";
 
 type ButtonLikeProps = React.ComponentProps<typeof Button>;
@@ -22,6 +22,7 @@ export function LogOutButton({
 	disabled,
 	...buttonProps
 }: LogOutButtonProps) {
+	const { t } = useTranslation();
 	const [isLoading, setIsLoading] = useState(false);
 
 	const handleClick = async () => {
@@ -47,10 +48,10 @@ export function LogOutButton({
 		>
 			<LoadingSwap
 				isLoading={isLoading}
-				text={authMessage("auth.loggingOut", "Signing out…")}
+				text={t("auth.loggingOut")}
 				className="flex items-center justify-center gap-2"
 			>
-				{children ?? authMessage("auth.logOut", "Log Out")}
+				{children ?? t("auth.logOut")}
 			</LoadingSwap>
 		</Button>
 	);

@@ -1,4 +1,4 @@
-import type { PermissionKey } from "./permissions";
+import type { PermissionKey } from "../../config/permissions";
 
 export type AuthorizationRoleSummary = {
 	id: string;

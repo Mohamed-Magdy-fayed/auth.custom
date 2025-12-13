@@ -2,10 +2,10 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { authMessage } from "@/auth/config";
 import { requestPasswordReset } from "@/auth/features/password/server/actions";
 import { passwordResetRequestSchema } from "@/auth/features/password/server/schemas";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,13 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type FormValues = z.infer<typeof passwordResetRequestSchema>;
 
 export function ForgotPasswordForm() {
+	const router = useRouter();
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<null | {
 		status: "success" | "error";
 		message: string;
@@ -35,11 +38,14 @@ export function ForgotPasswordForm() {
 	async function onSubmit(values: FormValues) {
 		setStatus(null);
 		const result = await requestPasswordReset(values);
-		setStatus(result);
 
 		if (result.status === "success") {
-			form.reset();
+			const params = new URLSearchParams({ email: values.email, requested: "1" });
+			router.push(`/reset-password?${params.toString()}`);
+			return;
 		}
+
+		setStatus(result);
 	}
 
 	return (
@@ -61,7 +67,7 @@ export function ForgotPasswordForm() {
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{authMessage("passwordReset.emailLabel", "Email")}</FormLabel>
+							<FormLabel>{t("passwordReset.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -75,8 +81,8 @@ export function ForgotPasswordForm() {
 					disabled={form.formState.isSubmitting}
 				>
 					{form.formState.isSubmitting
-						? authMessage("passwordReset.submitting", "Sending...")
-						: authMessage("passwordReset.submit", "Send reset code")}
+						? t("passwordReset.submitting")
+						: t("passwordReset.submit")}
 				</Button>
 			</form>
 		</Form>

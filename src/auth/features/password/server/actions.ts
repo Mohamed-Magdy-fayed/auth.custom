@@ -3,16 +3,16 @@
 import { randomInt } from "crypto";
 import { and, eq } from "drizzle-orm";
 
-import { authMessage, isFeatureEnabled } from "@/auth/config";
+import { isFeatureEnabled } from "@/auth/config";
 import { generateSalt, hashPassword } from "@/auth/core/passwordHasher";
 import { hashTokenValue } from "@/auth/core/token";
 import {
-	SessionsTable,
 	UserCredentialsTable,
 	UsersTable,
 	UserTokensTable,
 } from "@/auth/tables";
 import { db } from "@/drizzle/db";
+import { getT } from "@/lib/i18n/actions";
 import { sendPasswordResetCodeEmail } from "../emails/passwordReset";
 import {
 	passwordResetRequestSchema,
@@ -22,14 +22,28 @@ import {
 const PASSWORD_RESET_OTP_LENGTH = 6;
 const PASSWORD_RESET_OTP_TTL_MS = 1000 * 60 * 10; // 10 minutes
 
-function ensurePasswordFeatureEnabled(): PasswordResetResult | null {
+type Translator = (key: string, fallback: string, args?: Record<string, unknown>) => string;
+
+let cachedTranslator: Translator | null = null;
+
+async function getTranslator(): Promise<Translator> {
+	if (cachedTranslator) return cachedTranslator;
+	const { t } = await getT();
+	cachedTranslator = (key, fallback, args) => {
+		const value = t(key as any, args as any);
+		return value === key ? fallback : value;
+	};
+	return cachedTranslator;
+}
+
+function ensurePasswordFeatureEnabled(tr: Translator): PasswordResetResult | null {
 	if (isFeatureEnabled("password")) {
 		return null;
 	}
 
 	return {
 		status: "error",
-		message: authMessage(
+		message: tr(
 			"password.featureDisabled",
 			"Password-based authentication is disabled.",
 		),
@@ -55,7 +69,8 @@ type PasswordResetResult = { status: "success" | "error"; message: string };
 export async function requestPasswordReset(
 	unsafeData: unknown,
 ): Promise<PasswordResetResult> {
-	const featureError = ensurePasswordFeatureEnabled();
+	const tr = await getTranslator();
+	const featureError = ensurePasswordFeatureEnabled(tr);
 	if (featureError) {
 		return featureError;
 	}
@@ -67,7 +82,7 @@ export async function requestPasswordReset(
 			status: "error",
 			message:
 				parsed.error.issues[0]?.message ??
-				authMessage(
+				tr(
 					"passwordReset.request.invalidEmail",
 					"Enter a valid email address",
 				),
@@ -86,7 +101,7 @@ export async function requestPasswordReset(
 		// Avoid account enumeration: respond as success
 		return {
 			status: "success",
-			message: authMessage(
+			message: tr(
 				"passwordReset.request.success",
 				"If that email exists, we just sent a reset code.",
 			),
@@ -138,7 +153,7 @@ export async function requestPasswordReset(
 
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"passwordReset.request.emailError",
 				"We couldn't send the reset email. Please try again shortly.",
 			),
@@ -147,7 +162,7 @@ export async function requestPasswordReset(
 
 	return {
 		status: "success",
-		message: authMessage(
+		message: tr(
 			"passwordReset.request.success",
 			"If that email exists, we just sent a reset code.",
 		),
@@ -157,7 +172,8 @@ export async function requestPasswordReset(
 export async function resetPassword(
 	unsafeData: unknown,
 ): Promise<PasswordResetResult> {
-	const featureError = ensurePasswordFeatureEnabled();
+	const tr = await getTranslator();
+	const featureError = ensurePasswordFeatureEnabled(tr);
 	if (featureError) {
 		return featureError;
 	}
@@ -169,7 +185,7 @@ export async function resetPassword(
 			status: "error",
 			message:
 				parsed.error.issues[0]?.message ??
-				authMessage("passwordReset.reset.error", "Unable to reset password"),
+				tr("passwordReset.reset.error", "Unable to reset password"),
 		};
 	}
 
@@ -199,7 +215,7 @@ export async function resetPassword(
 	) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"passwordReset.reset.invalidCode",
 				"The verification code is invalid or has expired.",
 			),
@@ -215,7 +231,7 @@ export async function resetPassword(
 	if (tokenEmail && tokenEmail !== normalizedEmail) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"passwordReset.reset.invalidCode",
 				"The verification code is invalid or has expired.",
 			),
@@ -230,7 +246,7 @@ export async function resetPassword(
 	if (!user || user.emailNormalized !== normalizedEmail) {
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"passwordReset.reset.invalidCode",
 				"The verification code is invalid or has expired.",
 			),
@@ -262,17 +278,12 @@ export async function resetPassword(
 				.update(UserTokensTable)
 				.set({ consumedAt: now })
 				.where(eq(UserTokensTable.id, tokenRecord.id));
-
-			await trx
-				.update(SessionsTable)
-				.set({ status: "revoked", revokedAt: now, revokedBy: user.id })
-				.where(eq(SessionsTable.userId, user.id));
 		});
 	} catch (error) {
 		console.error(error);
 		return {
 			status: "error",
-			message: authMessage(
+			message: tr(
 				"passwordReset.reset.error",
 				"Unable to reset password",
 			),
@@ -281,7 +292,7 @@ export async function resetPassword(
 
 	return {
 		status: "success",
-		message: authMessage(
+		message: tr(
 			"passwordReset.reset.success",
 			"Password updated. You can sign in with your new password.",
 		),

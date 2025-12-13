@@ -1,22 +1,18 @@
 "use client";
 
 import {
-	Building2,
 	Fingerprint,
 	KeyRound,
 	Link2,
 	LogOut,
 	Mail,
-	MonitorSmartphone,
 	ShieldCheckIcon,
 	User as UserIcon,
-	Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { isFeatureEnabled } from "@/auth/config";
 import { LogOutButton } from "@/auth/nextjs/components/LogOutButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import {
@@ -34,12 +30,9 @@ import {
 import { Muted, Small } from "@/components/ui/typography";
 import { EmailDialog } from "./user-menu/EmailDialog";
 import { OAuthDialog } from "./user-menu/OAuthDialog";
-import { OrganizationsDialog } from "./user-menu/OrganizationsDialog";
 import { PasskeysDialog } from "./user-menu/PasskeysDialog";
 import { PasswordDialog } from "./user-menu/PasswordDialog";
 import { ProfileNameDialog } from "./user-menu/ProfileNameDialog";
-import { SessionsDialog } from "./user-menu/SessionsDialog";
-import { TeamsDialog } from "./user-menu/TeamsDialog";
 import type { UserMenuProps as Props } from "./user-menu/types";
 
 type DialogName =
@@ -48,9 +41,6 @@ type DialogName =
 	| "password"
 	| "passkeys"
 	| "oauth"
-	| "sessions"
-	| "organizations"
-	| "teams"
 	| null;
 
 export function UserMenu({
@@ -62,14 +52,8 @@ export function UserMenu({
 	emailVerified,
 	hasPassword,
 	passkeys,
-	organizations,
-	teamData,
 }: Props) {
 	const [openDialog, setOpenDialog] = useState<DialogName>(null);
-	const activeOrganization = useMemo(() => {
-		if (teamData.activeOrganization) return teamData.activeOrganization;
-		return organizations.find((org) => org.isDefault) ?? organizations[0] ?? null;
-	}, [organizations, teamData.activeOrganization]);
 
 	const handleSelect = (dialog: Exclude<DialogName, null>) => {
 		setOpenDialog(dialog);
@@ -95,14 +79,6 @@ export function UserMenu({
 				) : null;
 			case "oauth":
 				return isFeatureEnabled("oauth") ? <OAuthDialog /> : null;
-			case "sessions":
-				return isFeatureEnabled("sessions") ? <SessionsDialog /> : null;
-			case "organizations":
-				return isFeatureEnabled("organizations") ? (
-					<OrganizationsDialog organizations={organizations} />
-				) : null;
-			case "teams":
-				return isFeatureEnabled("teams") ? <TeamsDialog data={teamData} /> : null;
 			default:
 				return null;
 		}
@@ -143,17 +119,6 @@ export function UserMenu({
 						<div className="space-y-0.5 text-sm leading-tight">
 							<p className="font-semibold">{name}</p>
 							<Muted className="truncate text-xs">{email}</Muted>
-							{activeOrganization ? (
-								<div className="flex items-center gap-1 text-xs text-muted-foreground">
-									<Badge
-										variant="outline"
-										className="text-[10px] uppercase tracking-wide"
-									>
-										{activeOrganization.name}
-									</Badge>
-									<span className="truncate">· {activeOrganization.slug}</span>
-								</div>
-							) : null}
 						</div>
 					</DropdownMenuLabel>
 					<DropdownMenuSeparator />
@@ -213,39 +178,8 @@ export function UserMenu({
 										Manage OAuth accounts
 									</DropdownMenuItem>
 								) : null}
-								{isFeatureEnabled("sessions") ? (
-									<DropdownMenuItem
-										onSelect={(event) => (
-											event.preventDefault(), handleSelect("sessions")
-										)}
-									>
-										<MonitorSmartphone className="size-4" />
-										Manage sessions
-									</DropdownMenuItem>
-								) : null}
 							</DropdownMenuSubContent>
 						</DropdownMenuSub>
-					</DropdownMenuGroup>
-					<DropdownMenuSeparator />
-					<DropdownMenuGroup className="space-y-1">
-						{isFeatureEnabled("organizations") ? (
-							<DropdownMenuItem
-								onSelect={(event) => (
-									event.preventDefault(), handleSelect("organizations")
-								)}
-							>
-								<Building2 className="size-4" />
-								Organizations
-							</DropdownMenuItem>
-						) : null}
-						{isFeatureEnabled("teams") ? (
-							<DropdownMenuItem
-								onSelect={(event) => (event.preventDefault(), handleSelect("teams"))}
-							>
-								<Users className="size-4" />
-								Teams & members
-							</DropdownMenuItem>
-						) : null}
 					</DropdownMenuGroup>
 					<DropdownMenuSeparator />
 					<div className="px-1 py-1.5">

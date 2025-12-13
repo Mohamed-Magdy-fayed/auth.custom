@@ -68,9 +68,9 @@ export default function HomePage() {
 							Ship a production-grade auth experience in an afternoon.
 						</H1>
 						<Muted className="max-w-xl text-lg">
-							Gateling Auth bundles secure sign-in, organization management, billing, and
-							documentation so you can focus on your product. Launch on the free tier,
-							then let supporters back you with the Plus plan.
+							Gateling Auth bundles secure sign-in, organization management, billing,
+							and documentation so you can focus on your product. Launch on the free
+							tier, then let supporters back you with the Plus plan.
 						</Muted>
 						<div className="flex flex-wrap gap-3">
 							<Button asChild size="lg" className="rounded-full">
@@ -208,9 +208,9 @@ export default function HomePage() {
 					Ready for production, friendly for tinkering
 				</H1>
 				<Muted className="mx-auto max-w-2xl">
-					Deploy the repo, add your secrets, and invite customers today. Gateling Auth
-					stays free for real projects — the optional Plus tier lets supporters fund
-					the roadmap.
+					Deploy the repo, add your secrets, and invite customers today. Gateling
+					Auth stays free for real projects — the optional Plus tier lets supporters
+					fund the roadmap.
 				</Muted>
 				<div className="flex flex-wrap justify-center gap-3">
 					<Button asChild size="lg" className="rounded-full">

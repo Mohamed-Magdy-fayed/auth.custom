@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { getLocaleCookie } from "@/lib/i18n/actions";
+import { TranslationProvider } from "@/lib/i18n/useTranslation";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -16,13 +18,18 @@ export const metadata: Metadata = {
 		"Launch a polished SaaS authentication experience with multi-tenant orgs, billing, and docs out of the box.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
+	const locale = await getLocaleCookie();
+	const dir = locale === "ar" ? "rtl" : "ltr";
+
 	return (
-		<html>
+		<html lang={locale} dir={dir}>
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-				{children}
+				<TranslationProvider defaultLocale={locale} fallbackLocale="en">
+					{children}
+				</TranslationProvider>
 			</body>
 		</html>
 	);

@@ -1,27 +1,27 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1760780795810,
-      "tag": "0000_far_mindworm",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1760781266114,
-      "tag": "0001_skinny_mad_thinker",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1760892219521,
-      "tag": "0002_lying_korath",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1760780795810,
+			"tag": "0000_far_mindworm",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1760781266114,
+			"tag": "0001_skinny_mad_thinker",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1760892219521,
+			"tag": "0002_lying_korath",
+			"breakpoints": true
+		}
+	]
 }

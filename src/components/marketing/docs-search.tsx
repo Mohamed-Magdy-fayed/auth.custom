@@ -7,89 +7,89 @@ import { Input } from "@/components/ui/input";
 import type { DocArticle } from "@/data/docs-content";
 
 function normalize(value: string) {
-    return value.toLowerCase();
+	return value.toLowerCase();
 }
 
 type DocsSearchProps = { topics: DocArticle[] };
 
 export function DocsSearch({ topics }: DocsSearchProps) {
-    const [query, setQuery] = useState("");
+	const [query, setQuery] = useState("");
 
-    const results = useMemo(() => {
-        const normalizedQuery = normalize(query.trim());
-        if (!normalizedQuery) return topics;
+	const results = useMemo(() => {
+		const normalizedQuery = normalize(query.trim());
+		if (!normalizedQuery) return topics;
 
-        return topics.filter((topic) => {
-            const haystack = [
-                topic.title,
-                topic.summary,
-                topic.category,
-                topic.tags.join(" "),
-                topic.body.join(" "),
-            ]
-                .map(normalize)
-                .join(" ");
-            return haystack.includes(normalizedQuery);
-        });
-    }, [query, topics]);
+		return topics.filter((topic) => {
+			const haystack = [
+				topic.title,
+				topic.summary,
+				topic.category,
+				topic.tags.join(" "),
+				topic.body.join(" "),
+			]
+				.map(normalize)
+				.join(" ");
+			return haystack.includes(normalizedQuery);
+		});
+	}, [query, topics]);
 
-    return (
-        <div className="space-y-6">
-            <div className="rounded-xl border bg-card p-6 shadow-sm">
-                <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
-                    Search the docs
-                    <Input
-                        type="search"
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder='Try "passkeys" or "billing"'
-                        className="h-11"
-                    />
-                </label>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-                {results.map((topic) => (
-                    <article
-                        key={topic.id}
-                        className="flex h-full flex-col rounded-xl border bg-card p-6 shadow-sm"
-                    >
-                        <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-                            <Badge variant="outline">{topic.category}</Badge>
-                            <span>{topic.tags.join(" / ")}</span>
-                        </div>
-                        <h3 className="mt-3 text-xl font-semibold text-foreground">
-                            {topic.title}
-                        </h3>
-                        <p className="mt-2 text-sm text-muted-foreground">{topic.summary}</p>
-                        <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                            {topic.body.map((paragraph, index) => (
-                                <li key={index} className="leading-relaxed">
-                                    {paragraph}
-                                </li>
-                            ))}
-                        </ul>
-                        {topic.actions && topic.actions.length > 0 && (
-                            <div className="mt-6 flex flex-wrap gap-3 text-sm">
-                                {topic.actions.map((action) => (
-                                    <Link
-                                        key={action.href}
-                                        href={action.href}
-                                        className="font-medium text-primary underline-offset-4 hover:underline"
-                                    >
-                                        {action.label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </article>
-                ))}
-                {results.length === 0 && (
-                    <div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                        No documentation matched "{query}" yet. Try a different keyword or browse
-                        the categories above.
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+	return (
+		<div className="space-y-6">
+			<div className="rounded-xl border bg-card p-6 shadow-sm">
+				<label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+					Search the docs
+					<Input
+						type="search"
+						value={query}
+						onChange={(event) => setQuery(event.target.value)}
+						placeholder='Try "passkeys" or "billing"'
+						className="h-11"
+					/>
+				</label>
+			</div>
+			<div className="grid gap-6 md:grid-cols-2">
+				{results.map((topic) => (
+					<article
+						key={topic.id}
+						className="flex h-full flex-col rounded-xl border bg-card p-6 shadow-sm"
+					>
+						<div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+							<Badge variant="outline">{topic.category}</Badge>
+							<span>{topic.tags.join(" / ")}</span>
+						</div>
+						<h3 className="mt-3 text-xl font-semibold text-foreground">
+							{topic.title}
+						</h3>
+						<p className="mt-2 text-sm text-muted-foreground">{topic.summary}</p>
+						<ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+							{topic.body.map((paragraph, index) => (
+								<li key={index} className="leading-relaxed">
+									{paragraph}
+								</li>
+							))}
+						</ul>
+						{topic.actions && topic.actions.length > 0 && (
+							<div className="mt-6 flex flex-wrap gap-3 text-sm">
+								{topic.actions.map((action) => (
+									<Link
+										key={action.href}
+										href={action.href}
+										className="font-medium text-primary underline-offset-4 hover:underline"
+									>
+										{action.label}
+									</Link>
+								))}
+							</div>
+						)}
+					</article>
+				))}
+				{results.length === 0 && (
+					<div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+						No documentation matched "{query}" yet. Try a different keyword or browse
+						the categories above.
+					</div>
+				)}
+			</div>
+		</div>
+	);
 }

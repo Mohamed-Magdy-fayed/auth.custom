@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, ne } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { type ZodError, z } from "zod";
@@ -10,7 +10,7 @@ import {
 	hashPassword,
 } from "@/auth/core/passwordHasher";
 import { createSession } from "@/auth/core/session";
-import { SessionsTable, UserCredentialsTable, UsersTable } from "@/auth/tables";
+import { UserCredentialsTable, UsersTable } from "@/auth/tables";
 import { db } from "@/drizzle/db";
 
 import { getCurrentUser } from "./currentUser";
@@ -22,7 +22,6 @@ import {
 	type UpdateProfileInput,
 	updateProfileSchema,
 } from "./profileSchemas";
-import { getSessionContext } from "./sessionContext";
 
 type ActionResult = {
 	success: boolean;
@@ -95,43 +94,19 @@ export async function changePassword(
 	const passwordHash = await hashPassword(parsed.data.newPassword, salt);
 	const now = new Date();
 
-	await db.transaction(async (trx) => {
-		await trx
-			.update(UserCredentialsTable)
-			.set({
-				passwordHash,
-				passwordSalt: salt,
-				mustChangePassword: false,
-				lastChangedAt: now,
-			})
-			.where(eq(UserCredentialsTable.userId, currentUser.id));
-
-		if (currentUser.sessionId) {
-			await trx
-				.update(SessionsTable)
-				.set({ status: "revoked", revokedAt: now, revokedBy: currentUser.id })
-				.where(
-					and(
-						eq(SessionsTable.userId, currentUser.id),
-						ne(SessionsTable.id, currentUser.sessionId),
-					),
-				);
-		} else {
-			await trx
-				.update(SessionsTable)
-				.set({ status: "revoked", revokedAt: now, revokedBy: currentUser.id })
-				.where(eq(SessionsTable.userId, currentUser.id));
-		}
-	});
+	await db
+		.update(UserCredentialsTable)
+		.set({
+			passwordHash,
+			passwordSalt: salt,
+			mustChangePassword: false,
+			lastChangedAt: now,
+		})
+		.where(eq(UserCredentialsTable.userId, currentUser.id));
 
 	await createSession(
-		{
-			id: currentUser.id,
-			role: currentUser.role,
-			sessionId: currentUser.sessionId,
-		},
+		{ id: currentUser.id, role: currentUser.role },
 		await cookies(),
-		await getSessionContext(),
 	);
 
 	revalidatePath("/");
@@ -165,43 +140,19 @@ export async function createPassword(
 	const passwordHash = await hashPassword(parsed.data.newPassword, salt);
 	const now = new Date();
 
-	await db.transaction(async (trx) => {
-		await trx
-			.insert(UserCredentialsTable)
-			.values({
-				userId: currentUser.id,
-				passwordHash,
-				passwordSalt: salt,
-				mustChangePassword: false,
-				lastChangedAt: now,
-			});
-
-		if (currentUser.sessionId) {
-			await trx
-				.update(SessionsTable)
-				.set({ status: "revoked", revokedAt: now, revokedBy: currentUser.id })
-				.where(
-					and(
-						eq(SessionsTable.userId, currentUser.id),
-						ne(SessionsTable.id, currentUser.sessionId),
-					),
-				);
-		} else {
-			await trx
-				.update(SessionsTable)
-				.set({ status: "revoked", revokedAt: now, revokedBy: currentUser.id })
-				.where(eq(SessionsTable.userId, currentUser.id));
-		}
-	});
+	await db
+		.insert(UserCredentialsTable)
+		.values({
+			userId: currentUser.id,
+			passwordHash,
+			passwordSalt: salt,
+			mustChangePassword: false,
+			lastChangedAt: now,
+		});
 
 	await createSession(
-		{
-			id: currentUser.id,
-			role: currentUser.role,
-			sessionId: currentUser.sessionId,
-		},
+		{ id: currentUser.id, role: currentUser.role },
 		await cookies(),
-		await getSessionContext(),
 	);
 
 	revalidatePath("/");

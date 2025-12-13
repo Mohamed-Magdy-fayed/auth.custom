@@ -8,11 +8,5 @@ export {
 } from "./config/features";
 
 export {
-	configurePermissions,
 	getAvailablePermissions,
 } from "./config/permissions";
-
-export {
-	authMessage,
-	configureTranslations,
-} from "./config/translations";

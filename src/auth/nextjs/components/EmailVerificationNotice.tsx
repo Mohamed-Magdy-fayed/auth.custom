@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 
-import { authMessage } from "@/auth/config";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 import { sendEmailVerification } from "../emailActions";
 
@@ -14,16 +14,14 @@ type NoticeStatus = { success: boolean; message: string };
 export function EmailVerificationNotice({
 	isVerified,
 }: EmailVerificationNoticeProps) {
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<NoticeStatus | null>(null);
 	const [isPending, startTransition] = useTransition();
 
 	if (isVerified) {
 		return (
 			<p className="text-sm text-muted-foreground">
-				{authMessage(
-					"emailVerification.alreadyVerifiedNote",
-					"Your email address is verified.",
-				)}
+				{t("emailVerification.alreadyVerifiedNote")}
 			</p>
 		);
 	}
@@ -31,13 +29,10 @@ export function EmailVerificationNotice({
 	return (
 		<div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
 			<p className="font-medium">
-				{authMessage("emailVerification.notice.title", "Verify your email")}
+				{t("emailVerification.notice.title")}
 			</p>
 			<p className="mt-1">
-				{authMessage(
-					"emailVerification.notice.description",
-					"We use this address for password recovery and security alerts.",
-				)}
+				{t("emailVerification.notice.description")}
 			</p>
 			{status && (
 				<p
@@ -61,11 +56,8 @@ export function EmailVerificationNotice({
 				}}
 			>
 				{isPending
-					? authMessage("emailVerification.notice.sending", "Sending...")
-					: authMessage(
-							"emailVerification.notice.sendButton",
-							"Send verification email",
-						)}
+					? t("emailVerification.notice.sending")
+					: t("emailVerification.notice.sendButton")}
 			</Button>
 		</div>
 	);

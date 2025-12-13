@@ -29,10 +29,10 @@ export const RolesTable = pgTable(
 		),
 		isDefault: boolean("is_default").notNull().default(false),
 	},
-	(table) => ({
-		roleKeyUnique: uniqueIndex("auth_roles_key_organization_unique").on(
+	(table) => [
+		uniqueIndex("auth_roles_key_organization_unique").on(
 			table.organizationId,
 			table.key,
 		),
-	}),
+	],
 );

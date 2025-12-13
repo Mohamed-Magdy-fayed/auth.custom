@@ -19,23 +19,45 @@ import { and, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 
-import { authMessage, isFeatureEnabled } from "@/auth/config";
+import { isFeatureEnabled } from "@/auth/config";
 import { DEFAULT_ROLE_KEY } from "@/auth/core/constants";
 import { createSession } from "@/auth/core/session";
 import { hashTokenValue } from "@/auth/core/token";
 import { getCurrentUser } from "@/auth/nextjs/currentUser";
-import { getSessionContext } from "@/auth/nextjs/sessionContext";
 import {
 	BiometricCredentialsTable,
 	UsersTable,
 	UserTokensTable,
 } from "@/auth/tables";
 import { db } from "@/drizzle/db";
+import { getT } from "@/lib/i18n/actions";
 import { base64UrlToBuffer, bufferToBase64Url } from "@/lib/webauthn/encoding";
 
 const PASSKEY_CHALLENGE_TTL_MS = 1000 * 60 * 10;
-const RP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? "Gateling Auth";
 const textEncoder = new TextEncoder();
+type Translator = (
+	key: string,
+	fallback: string,
+	args?: Record<string, unknown>,
+) => string;
+
+let cachedTranslator: Translator | null = null;
+
+async function getTranslator(): Promise<Translator> {
+	if (cachedTranslator) return cachedTranslator;
+	const { t } = await getT();
+	cachedTranslator = (key, fallback, args) => {
+		const value = t(key as any, args as any);
+		return value === key ? fallback : value;
+	};
+	return cachedTranslator;
+}
+
+function getRpName(tr: Translator) {
+	return (
+		process.env.NEXT_PUBLIC_APP_NAME ?? tr("passkeys.rpName", "Gateling Auth")
+	);
+}
 
 export type PasskeyListItem = {
 	id: string;
@@ -61,10 +83,10 @@ type AuthenticationOptionsResult =
 	}
 	| { success: false; message: string };
 
-function disabledActionResult(): ActionResult {
+function disabledActionResult(tr: Translator): ActionResult {
 	return {
 		success: false,
-		message: authMessage(
+		message: tr(
 			"passkeys.featureDisabled",
 			"Passkey authentication is disabled for this workspace.",
 		),
@@ -237,10 +259,11 @@ export async function listPasskeys(): Promise<PasskeyListItem[]> {
 }
 
 export async function beginPasskeyRegistration(): Promise<RegistrationOptionsResult> {
+	const tr = await getTranslator();
 	if (!isFeatureEnabled("passkeys")) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.featureDisabled",
 				"Passkey authentication is disabled for this workspace.",
 			),
@@ -256,7 +279,7 @@ export async function beginPasskeyRegistration(): Promise<RegistrationOptionsRes
 	if (!origin) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingOrigin",
 				"Unable to determine relying party origin.",
 			),
@@ -267,7 +290,7 @@ export async function beginPasskeyRegistration(): Promise<RegistrationOptionsRes
 	if (!rpId) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingRpId",
 				"Unable to determine relying party identifier.",
 			),
@@ -287,7 +310,7 @@ export async function beginPasskeyRegistration(): Promise<RegistrationOptionsRes
 	) as Uint8Array<ArrayBuffer>;
 
 	const options = await generateRegistrationOptions({
-		rpName: RP_NAME,
+		rpName: getRpName(tr),
 		rpID: rpId,
 		userID: userIdBytes,
 		userName: user.email,
@@ -318,8 +341,9 @@ export async function beginPasskeyRegistration(): Promise<RegistrationOptionsRes
 export async function completePasskeyRegistration(
 	attestation: RegistrationResponseJSON,
 ): Promise<ActionResult> {
+	const tr = await getTranslator();
 	if (!isFeatureEnabled("passkeys")) {
-		return disabledActionResult();
+		return disabledActionResult(tr);
 	}
 
 	const user = await getCurrentUser({
@@ -335,7 +359,7 @@ export async function completePasskeyRegistration(
 	if (!challenge) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.register.invalidChallenge",
 				"Passkey registration challenge is no longer valid.",
 			),
@@ -347,7 +371,7 @@ export async function completePasskeyRegistration(
 		await revokeChallengeToken(challenge.id);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingOrigin",
 				"Unable to determine relying party origin.",
 			),
@@ -359,7 +383,7 @@ export async function completePasskeyRegistration(
 		await revokeChallengeToken(challenge.id);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingRpId",
 				"Unable to determine relying party identifier.",
 			),
@@ -378,7 +402,7 @@ export async function completePasskeyRegistration(
 		await revokeChallengeToken(challenge.id);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.register.error",
 				"Unable to verify passkey registration.",
 			),
@@ -420,16 +444,14 @@ export async function completePasskeyRegistration(
 
 	return {
 		success: true,
-		message: authMessage(
-			"passkeys.register.success",
-			"Passkey registered successfully.",
-		),
+		message: tr("passkeys.register.success", "Passkey registered successfully."),
 	};
 }
 
 export async function deletePasskey(id: string): Promise<ActionResult> {
+	const tr = await getTranslator();
 	if (!isFeatureEnabled("passkeys")) {
-		return disabledActionResult();
+		return disabledActionResult(tr);
 	}
 
 	const user = await getCurrentUser({ redirectIfNotFound: true });
@@ -442,10 +464,7 @@ export async function deletePasskey(id: string): Promise<ActionResult> {
 	if (!credential || credential.userId !== user.id) {
 		return {
 			success: false,
-			message: authMessage(
-				"passkeys.delete.notFound",
-				"Passkey could not be found.",
-			),
+			message: tr("passkeys.delete.notFound", "Passkey could not be found."),
 		};
 	}
 
@@ -457,20 +476,18 @@ export async function deletePasskey(id: string): Promise<ActionResult> {
 
 	return {
 		success: true,
-		message: authMessage(
-			"passkeys.delete.success",
-			"Passkey removed successfully.",
-		),
+		message: tr("passkeys.delete.success", "Passkey removed successfully."),
 	};
 }
 
 export async function beginPasskeyAuthentication(
 	email: string,
 ): Promise<AuthenticationOptionsResult> {
+	const tr = await getTranslator();
 	if (!isFeatureEnabled("passkeys")) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.featureDisabled",
 				"Passkey authentication is disabled for this workspace.",
 			),
@@ -489,7 +506,7 @@ export async function beginPasskeyAuthentication(
 	if (!user || user.status !== "active") {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.auth.error.userNotFound",
 				"No active account found for this email.",
 			),
@@ -499,7 +516,7 @@ export async function beginPasskeyAuthentication(
 	if (!user?.biometricCredentials || user.biometricCredentials.length === 0) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.auth.error.noCredentials",
 				"No passkeys are registered for this account.",
 			),
@@ -510,7 +527,7 @@ export async function beginPasskeyAuthentication(
 	if (!origin) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingOrigin",
 				"Unable to determine relying party origin.",
 			),
@@ -521,7 +538,7 @@ export async function beginPasskeyAuthentication(
 	if (!rpId) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingRpId",
 				"Unable to determine relying party identifier.",
 			),
@@ -553,8 +570,9 @@ export async function completePasskeyAuthentication(
 	email: string,
 	assertion: AuthenticationResponseJSON,
 ): Promise<ActionResult> {
+	const tr = await getTranslator();
 	if (!isFeatureEnabled("passkeys")) {
-		return disabledActionResult();
+		return disabledActionResult(tr);
 	}
 
 	const normalizedEmail = normalizeEmail(email);
@@ -580,7 +598,7 @@ export async function completePasskeyAuthentication(
 	if (!user || user.status !== "active") {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.auth.error.userNotFound",
 				"No active account found for this email.",
 			),
@@ -595,7 +613,7 @@ export async function completePasskeyAuthentication(
 	if (!challenge) {
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.auth.error.invalidChallenge",
 				"Passkey sign-in challenge has expired.",
 			),
@@ -607,7 +625,7 @@ export async function completePasskeyAuthentication(
 		await revokeChallengeToken(challenge.id);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingOrigin",
 				"Unable to determine relying party origin.",
 			),
@@ -619,7 +637,7 @@ export async function completePasskeyAuthentication(
 		await revokeChallengeToken(challenge.id);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.error.missingRpId",
 				"Unable to determine relying party identifier.",
 			),
@@ -634,7 +652,7 @@ export async function completePasskeyAuthentication(
 		await revokeChallengeToken(challenge.id);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.auth.error.credentialMismatch",
 				"This passkey does not match our records.",
 			),
@@ -663,7 +681,7 @@ export async function completePasskeyAuthentication(
 		await revokeChallengeToken(challenge.id);
 		return {
 			success: false,
-			message: authMessage(
+			message: tr(
 				"passkeys.auth.error.generic",
 				"Unable to verify passkey response.",
 			),
@@ -690,11 +708,7 @@ export async function completePasskeyAuthentication(
 		user.roleAssignments?.find((assignment) => assignment.role?.key)?.role?.key ??
 		DEFAULT_ROLE_KEY;
 
-	await createSession(
-		{ id: user.id, role: primaryRole },
-		await cookies(),
-		await getSessionContext(),
-	);
+	await createSession({ id: user.id, role: primaryRole }, await cookies());
 
 	await db
 		.update(UsersTable)
@@ -705,9 +719,6 @@ export async function completePasskeyAuthentication(
 
 	return {
 		success: true,
-		message: authMessage(
-			"passkeys.auth.success",
-			"Signed in successfully with passkey.",
-		),
+		message: tr("passkeys.auth.success", "Signed in successfully with passkey."),
 	};
 }

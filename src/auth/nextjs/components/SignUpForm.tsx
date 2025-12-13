@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { authMessage } from "@/auth/config";
 import type { OAuthProvider } from "@/auth/tables";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { oAuthSignIn, signUp } from "../actions";
 import { signUpSchema } from "../schemas";
 
@@ -35,6 +35,7 @@ export function SignUpForm({
 	priceId,
 	inviteToken,
 }: SignUpFormProps) {
+	const { t } = useTranslation();
 	const [error, setError] = useState<string>();
 	const [oauthError, setOauthError] = useState<string>();
 	const form = useForm<z.infer<typeof signUpSchema>>({
@@ -96,10 +97,7 @@ export function SignUpForm({
 								type="button"
 								onClick={async () => await handleOAuthClick(option.provider)}
 							>
-								{authMessage("auth.oauth.providerButton", option.label, {
-									provider: option.label,
-									providerKey: option.provider,
-								})}
+								{t("auth.oauth.providerButton", { provider: option.label })}
 							</Button>
 						))}
 					</div>
@@ -109,7 +107,7 @@ export function SignUpForm({
 					name="name"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{authMessage("auth.signUp.nameLabel", "Name")}</FormLabel>
+							<FormLabel>{t("auth.signUp.nameLabel")}</FormLabel>
 							<FormControl>
 								<Input type="text" {...field} />
 							</FormControl>
@@ -122,7 +120,7 @@ export function SignUpForm({
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{authMessage("auth.signUp.emailLabel", "Email")}</FormLabel>
+							<FormLabel>{t("auth.signUp.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" {...field} />
 							</FormControl>
@@ -136,7 +134,7 @@ export function SignUpForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("auth.signUp.passwordLabel", "Password")}
+								{t("auth.signUp.passwordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" {...field} />
@@ -148,11 +146,11 @@ export function SignUpForm({
 				<div className="flex gap-4 justify-end">
 					<Button asChild variant="link">
 						<Link href={signInHref}>
-							{authMessage("auth.signUp.toSignIn", "Sign In")}
+							{t("auth.signUp.toSignIn")}
 						</Link>
 					</Button>
 					<Button type="submit">
-						{authMessage("auth.signUp.submit", "Sign Up")}
+						{t("auth.signUp.submit")}
 					</Button>
 				</div>
 			</form>

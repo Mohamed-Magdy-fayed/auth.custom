@@ -2,7 +2,6 @@
 
 import { Check, PlusCircle, XCircle } from "lucide-react";
 import * as React from "react";
-import { authMessage } from "@/auth/config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,7 +94,7 @@ export function SelectField<TData>({
 					{selectedValues.size !== 0 ? (
 						<div
 							role="button"
-							aria-label={`Clear ${title} filter`}
+							aria-label={"open select field || افتح حقل الاختيار"}
 							tabIndex={0}
 							onClick={onReset}
 							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -121,10 +120,7 @@ export function SelectField<TData>({
 							<div className="hidden items-center gap-1 lg:flex">
 								{selectedValues.size > 2 ? (
 									<Badge variant="secondary" className="rounded-sm px-1 font-normal">
-										{authMessage(
-											`${selectedValues.size} selected`,
-											`${selectedValues.size} selected`,
-										)}
+										{`${selectedValues.size} selected`}
 									</Badge>
 								) : (
 									options
@@ -148,9 +144,7 @@ export function SelectField<TData>({
 				<Command>
 					<CommandInput placeholder={title} />
 					<CommandList className="max-h-full">
-						<CommandEmpty>
-							{authMessage("noResults", "No results found")}
-						</CommandEmpty>
+						<CommandEmpty>No results found</CommandEmpty>
 						<CommandGroup className="max-h-[18.75rem] overflow-y-auto overflow-x-hidden">
 							{options.map((option) => {
 								const isSelected = selectedValues.has(option.value);
@@ -186,7 +180,7 @@ export function SelectField<TData>({
 										onSelect={() => onReset()}
 										className="justify-center text-center"
 									>
-										{authMessage("common.clear", "Clear selection")}
+										Clear selection
 									</CommandItem>
 								</CommandGroup>
 							</>

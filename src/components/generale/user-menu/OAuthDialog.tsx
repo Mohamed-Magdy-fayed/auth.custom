@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { authMessage } from "@/auth/config";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { OAuthConnectionControls } from "@/auth/nextjs/components/OAuthConnectionControls";
 import { listOAuthConnections } from "@/auth/nextjs/oauthActions";
 import type { OAuthProvider } from "@/auth/tables";
@@ -12,12 +11,26 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Muted } from "@/components/ui/typography";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 type ConnectionItem = Awaited<ReturnType<typeof listOAuthConnections>>[number];
 
 type Status = { type: "success" | "error"; message: string } | null;
 
 export function OAuthDialog() {
+	const { t } = useTranslation();
+	const tr = useMemo(
+		() =>
+			(
+				key: string,
+				fallback: string,
+				args?: Record<string, unknown>,
+			) => {
+				const value = t(key as any, args as any);
+				return value === key ? fallback : value;
+			},
+		[t],
+	);
 	const [connections, setConnections] = useState<ConnectionItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [status, setStatus] = useState<Status>(null);
@@ -32,7 +45,7 @@ export function OAuthDialog() {
 			console.error("Failed to load OAuth connections", error);
 			setStatus({
 				type: "error",
-				message: authMessage(
+				message: tr(
 					"oauth.connections.loadError",
 					"Unable to load OAuth connections.",
 				),
@@ -40,7 +53,7 @@ export function OAuthDialog() {
 		} finally {
 			setIsLoading(false);
 		}
-	}, []);
+	}, [tr]);
 
 	useEffect(() => {
 		void loadConnections();
@@ -52,11 +65,11 @@ export function OAuthDialog() {
 				type: "success",
 				message:
 					message ??
-					authMessage("oauth.connections.disconnectSuccess", "Connection removed."),
+					tr("oauth.connections.disconnectSuccess", "Connection removed."),
 			});
 			void loadConnections();
 		},
-		[loadConnections],
+		[loadConnections, tr],
 	);
 
 	const handleError = useCallback((message: string) => {
@@ -86,7 +99,7 @@ export function OAuthDialog() {
 				<Muted>Loading OAuth providers…</Muted>
 			) : connections.length === 0 ? (
 				<Muted>
-					{authMessage(
+					{tr(
 						"oauth.connections.empty",
 						"No OAuth providers are currently configured.",
 					)}
@@ -97,11 +110,11 @@ export function OAuthDialog() {
 						const connectedAt = formatDate(connection.connectedAt);
 						const statusCopy = connection.connected
 							? connectedAt
-								? authMessage("oauth.connections.connectedAt", "Connected {date}", {
-										date: connectedAt,
-									})
-								: authMessage("oauth.connections.connected", "Connected")
-							: authMessage("oauth.connections.notConnected", "Not connected");
+								? tr("oauth.connections.connectedAt", "Connected {date}", {
+									date: connectedAt,
+								})
+								: tr("oauth.connections.connected", "Connected")
+							: tr("oauth.connections.notConnected", "Not connected");
 
 						return (
 							<div

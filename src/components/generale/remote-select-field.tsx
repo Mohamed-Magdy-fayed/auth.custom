@@ -2,7 +2,6 @@
 
 import { Check, Loader2, PlusCircle, XCircle } from "lucide-react";
 import * as React from "react";
-import { authMessage } from "@/auth/config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { cn } from "@/lib/utils";
 
 export interface RemoteSearchOption<TValue> {
@@ -56,28 +56,6 @@ interface RemoteSelectFieldProps<TValue> {
 	initialOptions?: RemoteSearchOption<TValue>[];
 }
 
-const DEFAULT_ERROR_MESSAGE = authMessage(
-	"remoteSelectField.error",
-	"Something went wrong while loading results.",
-);
-
-const DEFAULT_IDLE_MESSAGE = (min: number) =>
-	authMessage(
-		"remoteSelectField.idle",
-		"Type at least {count} characters to search",
-		{ count: String(min) },
-	);
-
-const DEFAULT_EMPTY_MESSAGE = authMessage(
-	"remoteSelectField.empty",
-	"No results found",
-);
-
-const DEFAULT_LOADING_MESSAGE = authMessage(
-	"remoteSelectField.loading",
-	"Searching…",
-);
-
 type HighlightConfig = { regex: RegExp; tokens: string[] };
 
 export function RemoteSelectField<TValue>({
@@ -93,6 +71,27 @@ export function RemoteSelectField<TValue>({
 	loadingMessage,
 	initialOptions,
 }: RemoteSelectFieldProps<TValue>) {
+	const { t } = useTranslation();
+	const tr = React.useMemo(
+		() => (key: string, fallback: string, args?: Record<string, unknown>) => {
+			const value = t(key as any, args as any);
+			return value === key ? fallback : value;
+		},
+		[t],
+	);
+	const defaultErrorMessage = tr(
+		"remoteSelectField.error",
+		"Something went wrong while loading results.",
+	);
+	const defaultIdleMessage = React.useCallback(
+		(min: number) =>
+			tr("remoteSelectField.idle", "Type at least {count} characters to search", {
+				count: String(min),
+			}),
+		[tr],
+	);
+	const defaultEmptyMessage = tr("remoteSelectField.empty", "No results found");
+	const defaultLoadingMessage = tr("remoteSelectField.loading", "Searching…");
 	const [open, setOpen] = React.useState(false);
 	const [query, setQuery] = React.useState("");
 	const [remoteOptions, setRemoteOptions] = React.useState<
@@ -169,7 +168,7 @@ export function RemoteSelectField<TValue>({
 
 				if (!result.success) {
 					setRemoteOptions([]);
-					setSearchError(result.error || DEFAULT_ERROR_MESSAGE);
+					setSearchError(result.error || defaultErrorMessage);
 					return;
 				}
 
@@ -179,16 +178,16 @@ export function RemoteSelectField<TValue>({
 				if (requestId !== requestIdRef.current) return;
 
 				const message =
-					error instanceof Error ? error.message : DEFAULT_ERROR_MESSAGE;
+					error instanceof Error ? error.message : defaultErrorMessage;
 				setRemoteOptions([]);
-				setSearchError(message || DEFAULT_ERROR_MESSAGE);
+				setSearchError(message || defaultErrorMessage);
 			} finally {
 				if (requestId === requestIdRef.current) {
 					setIsSearching(false);
 				}
 			}
 		},
-		[minQueryLength, searchAction],
+		[defaultErrorMessage, minQueryLength, searchAction],
 	);
 
 	const debouncedSearch = useDebouncedCallback(runSearch, 500);
@@ -250,13 +249,20 @@ export function RemoteSelectField<TValue>({
 		if (searchError) return searchError;
 
 		if (!canSearch) {
-			return idleMessage ?? DEFAULT_IDLE_MESSAGE(minQueryLength);
+			return idleMessage ?? defaultIdleMessage(minQueryLength);
 		}
 
-		return emptyMessage ?? DEFAULT_EMPTY_MESSAGE;
-	}, [canSearch, emptyMessage, idleMessage, minQueryLength, searchError]);
+		return emptyMessage ?? defaultEmptyMessage;
+	}, [
+		canSearch,
+		defaultIdleMessage,
+		emptyMessage,
+		idleMessage,
+		minQueryLength,
+		searchError,
+	]);
 
-	const loaderMessage = loadingMessage ?? DEFAULT_LOADING_MESSAGE;
+	const loaderMessage = loadingMessage ?? defaultLoadingMessage;
 
 	const selectedCount = selected.length;
 
@@ -272,7 +278,7 @@ export function RemoteSelectField<TValue>({
 					{selectedCount > 0 ? (
 						<div
 							role="button"
-							aria-label={authMessage("remoteSelectField.clear", "Clear selection")}
+							aria-label={tr("remoteSelectField.clear", "Clear selection")}
 							tabIndex={0}
 							onClick={handleReset}
 							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -298,7 +304,7 @@ export function RemoteSelectField<TValue>({
 							<div className="hidden items-center gap-1 lg:flex">
 								{selectedCount > 2 ? (
 									<Badge variant="secondary" className="rounded-sm px-1 font-normal">
-										{authMessage("remoteSelectField.selectedCount", "{count} selected", {
+										{tr("remoteSelectField.selectedCount", "{count} selected", {
 											count: String(selectedCount),
 										})}
 									</Badge>
@@ -382,7 +388,7 @@ export function RemoteSelectField<TValue>({
 										onSelect={() => handleReset()}
 										className="justify-center text-center"
 									>
-										{authMessage("remoteSelectField.clearSelection", "Clear selection")}
+										{tr("remoteSelectField.clearSelection", "Clear selection")}
 									</CommandItem>
 								</CommandGroup>
 							</>

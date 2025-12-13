@@ -4,8 +4,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { authMessage } from "@/auth/config";
-import { OWNER_ROLE_KEY } from "@/auth/nextjs/org/permissions";
+import { OWNER_ROLE_KEY } from "@/auth/config/permissions";
 import {
 	OAuthProvider,
 	OrganizationMembershipsTable,
@@ -41,7 +40,22 @@ import {
 	removeSession,
 } from "../core/session";
 import { signInSchema, signUpSchema } from "./schemas";
-import { getSessionContext } from "./sessionContext";
+import { getT } from "@/lib/i18n/actions";
+
+type Translator = (
+	key: string,
+	fallback: string,
+	args?: Record<string, unknown>,
+) => string;
+
+async function getTranslator(): Promise<Translator> {
+	const { t } = await getT();
+
+	return (key, fallback, args) => {
+		const value = t(key as any, args as any);
+		return value === key ? fallback : value;
+	};
+}
 
 function normalizeEmail(email: string) {
 	return email.trim().toLowerCase();
@@ -87,10 +101,11 @@ async function generateUniqueTeamSlug(trx: DbTransaction, name: string) {
 }
 
 export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
+	const tr = await getTranslator();
 	const { success, data } = signInSchema.safeParse(unsafeData);
 
 	if (!success)
-		return authMessage("auth.signIn.error.generic", "Unable to log you in");
+		return tr("auth.signIn.error.generic", "Unable to log you in");
 
 	const normalizedEmail = normalizeEmail(data.email);
 
@@ -109,11 +124,11 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
 		user.credentials.passwordHash == null ||
 		user.credentials.passwordSalt == null
 	) {
-		return authMessage("auth.signIn.error.generic", "Unable to log you in");
+		return tr("auth.signIn.error.generic", "Unable to log you in");
 	}
 
 	if (user.status !== "active") {
-		return authMessage("auth.signIn.error.inactive", "Account is not active");
+		return tr("auth.signIn.error.inactive", "Account is not active");
 	}
 
 	const isCorrectPassword = await comparePasswords({
@@ -123,27 +138,21 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
 	});
 
 	if (!isCorrectPassword)
-		return authMessage("auth.signIn.error.generic", "Unable to log you in");
+		return tr("auth.signIn.error.generic", "Unable to log you in");
 
 	const primaryRole =
 		user.roleAssignments?.find((assignment) => assignment.role != null)?.role
 			?.key ?? DEFAULT_ROLE_KEY;
 
 	const sessionCookies = await cookies();
-	const sessionContext = await getSessionContext();
 
-	await createSession(
-		{ id: user.id, role: primaryRole },
-		sessionCookies,
-		sessionContext,
-	);
+	await createSession({ id: user.id, role: primaryRole }, sessionCookies);
 
 	const teamContext = await getUserWithTeam(user.id);
 	await logActivity(
 		teamContext?.teamId ?? null,
 		user.id,
 		ActivityType.SIGN_IN,
-		sessionContext.ipAddress,
 	);
 
 	if (data.redirect === "checkout" && data.priceId) {
@@ -162,29 +171,29 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
 }
 
 export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
+	const tr = await getTranslator();
 	const result = signUpSchema.safeParse(unsafeData);
 
 	if (!result.success) {
 		console.warn("signUp validation failed", result.error.flatten());
 		return (
 			result.error.issues[0]?.message ??
-			authMessage("auth.signUp.error.generic", "Unable to create account")
+			tr("auth.signUp.error.generic", "Unable to create account")
 		);
 	}
 
 	const data = result.data;
 	const normalizedEmail = normalizeEmail(data.email);
-	const duplicateMessage = authMessage(
+	const duplicateMessage = tr(
 		"auth.signUp.error.duplicate",
 		"Account already exists for this email",
 	);
-	const invalidInvitationMessage = authMessage(
+	const invalidInvitationMessage = tr(
 		"auth.signUp.error.invalidInvite",
 		"Invalid or expired invitation",
 	);
 
 	const sessionCookies = await cookies();
-	const sessionContext = await getSessionContext();
 	const now = new Date();
 
 	type SignUpProvisionResult = {
@@ -392,7 +401,7 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 			},
 		);
 
-		await createSession(signUpResult.sessionUser, sessionCookies, sessionContext);
+		await createSession(signUpResult.sessionUser, sessionCookies);
 
 		const teamId = signUpResult.team?.id ?? null;
 		if (teamId) {
@@ -400,7 +409,6 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 				teamId,
 				signUpResult.sessionUser.id,
 				ActivityType.SIGN_UP,
-				sessionContext.ipAddress,
 			);
 			await logActivity(
 				teamId,
@@ -408,7 +416,6 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 				signUpResult.acceptedInvitation
 					? ActivityType.ACCEPT_INVITATION
 					: ActivityType.CREATE_TEAM,
-				sessionContext.ipAddress,
 			);
 		}
 
@@ -431,7 +438,7 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 		}
 
 		console.error(error);
-		return authMessage("auth.signUp.error.generic", "Unable to create account");
+		return tr("auth.signUp.error.generic", "Unable to create account");
 	}
 }
 
@@ -450,7 +457,6 @@ export async function logOut() {
 
 	await removeSession({
 		delete: (val) => cookieStore.delete(val),
-		get: (val) => cookieStore.get(val),
 	});
 
 	redirect("/sign-in");
@@ -461,9 +467,11 @@ export async function oAuthSignIn(provider: OAuthProvider) {
 		throw new Error("Unsupported OAuth provider");
 	}
 
+	const tr = await getTranslator();
+
 	if (!isOAuthProviderConfigured(provider)) {
 		return {
-			error: authMessage(
+			error: tr(
 				"auth.oauth.providerUnavailable",
 				`${providerDisplayNames[provider]} sign-in is not currently available.`,
 			),

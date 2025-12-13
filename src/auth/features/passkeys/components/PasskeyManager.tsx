@@ -3,8 +3,9 @@
 import { startRegistration } from "@simplewebauthn/browser";
 import { useMemo, useState } from "react";
 
-import { authMessage, isFeatureEnabled } from "@/auth/config";
+import { isFeatureEnabled } from "@/auth/config";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
 	beginPasskeyRegistration,
 	completePasskeyRegistration,
@@ -20,6 +21,14 @@ export function PasskeyManager({
 }: {
 	initialPasskeys: PasskeyListItem[];
 }) {
+	const { t } = useTranslation();
+	const tr = useMemo(
+		() => (key: string, fallback: string, args?: Record<string, unknown>) => {
+			const value = t(key as any, args as any);
+			return value === key ? fallback : value;
+		},
+		[t],
+	);
 	const featureEnabled = useMemo(() => isFeatureEnabled("passkeys"), []);
 	const [passkeys, setPasskeys] = useState(initialPasskeys);
 	const [status, setStatus] = useState<Status>(null);
@@ -38,7 +47,7 @@ export function PasskeyManager({
 		if (!featureEnabled) {
 			setStatus({
 				type: "error",
-				message: authMessage(
+				message: tr(
 					"passkeys.featureDisabled",
 					"Passkey authentication is disabled for this workspace.",
 				),
@@ -49,7 +58,7 @@ export function PasskeyManager({
 		if (typeof window === "undefined" || !window.PublicKeyCredential) {
 			setStatus({
 				type: "error",
-				message: authMessage(
+				message: tr(
 					"passkeys.register.unsupported",
 					"Passkeys are not supported in this browser.",
 				),
@@ -85,7 +94,7 @@ export function PasskeyManager({
 			) {
 				setStatus({
 					type: "error",
-					message: authMessage(
+					message: tr(
 						"passkeys.register.cancelled",
 						"Passkey registration was cancelled.",
 					),
@@ -96,7 +105,7 @@ export function PasskeyManager({
 			console.error("Passkey registration failed", caught);
 			setStatus({
 				type: "error",
-				message: authMessage("passkeys.register.error", "Unable to add passkey."),
+				message: tr("passkeys.register.error", "Unable to add passkey."),
 			});
 		} finally {
 			setIsRegistering(false);
@@ -110,7 +119,7 @@ export function PasskeyManager({
 		if (!featureEnabled) {
 			setStatus({
 				type: "error",
-				message: authMessage(
+				message: tr(
 					"passkeys.featureDisabled",
 					"Passkey authentication is disabled for this workspace.",
 				),
@@ -132,7 +141,7 @@ export function PasskeyManager({
 			console.error("Passkey removal failed", caught);
 			setStatus({
 				type: "error",
-				message: authMessage("passkeys.delete.error", "Unable to remove passkey."),
+				message: tr("passkeys.delete.error", "Unable to remove passkey."),
 			});
 		} finally {
 			setBusyId(null);
@@ -142,7 +151,7 @@ export function PasskeyManager({
 	if (!featureEnabled) {
 		return (
 			<div className="rounded border border-dashed px-3 py-4 text-sm text-muted-foreground">
-				{authMessage(
+				{tr(
 					"passkeys.featureDisabled",
 					"Passkey authentication is disabled for this workspace.",
 				)}
@@ -165,21 +174,21 @@ export function PasskeyManager({
 			)}
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<p className="text-sm text-muted-foreground">
-					{authMessage(
+					{tr(
 						"passkeys.settings.description",
 						"Register a passkey to sign in without a password.",
 					)}
 				</p>
 				<Button disabled={isRegistering} onClick={handleRegister}>
 					{isRegistering
-						? authMessage("passkeys.registering", "Waiting for passkey...")
-						: authMessage("passkeys.add", "Add passkey")}
+						? tr("passkeys.registering", "Waiting for passkey...")
+						: tr("passkeys.add", "Add passkey")}
 				</Button>
 			</div>
 			<ul className="space-y-3">
 				{passkeys.length === 0 && (
 					<li className="rounded border border-dashed px-3 py-4 text-sm text-muted-foreground">
-						{authMessage("passkeys.list.empty", "No passkeys added yet.")}
+						{tr("passkeys.list.empty", "No passkeys added yet.")}
 					</li>
 				)}
 				{passkeys.map((item) => (
@@ -189,15 +198,15 @@ export function PasskeyManager({
 					>
 						<div className="space-y-1">
 							<p className="font-medium">
-								{item.label ?? authMessage("passkeys.list.defaultLabel", "Passkey")}
+								{item.label ?? tr("passkeys.list.defaultLabel", "Passkey")}
 							</p>
 							<p className="text-xs text-muted-foreground">
-								{authMessage("passkeys.list.created", "Created")}{" "}
+								{tr("passkeys.list.created", "Created")}{" "}
 								{new Date(item.createdAt).toLocaleString()}
 							</p>
 							{item.lastUsedAt && (
 								<p className="text-xs text-muted-foreground">
-									{authMessage("passkeys.list.lastUsed", "Last used")}{" "}
+									{tr("passkeys.list.lastUsed", "Last used")}{" "}
 									{new Date(item.lastUsedAt).toLocaleString()}
 								</p>
 							)}
@@ -208,8 +217,8 @@ export function PasskeyManager({
 							onClick={() => handleDelete(item.id)}
 						>
 							{busyId === item.id
-								? authMessage("passkeys.deleting", "Removing...")
-								: authMessage("passkeys.delete", "Remove")}
+								? tr("passkeys.deleting", "Removing...")
+								: tr("passkeys.delete", "Remove")}
 						</Button>
 					</li>
 				))}

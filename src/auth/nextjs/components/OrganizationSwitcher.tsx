@@ -2,10 +2,10 @@
 
 import { TrashIcon } from "lucide-react";
 import { useState, useTransition } from "react";
-import { authMessage } from "@/auth/config";
 import { ActionButton } from "@/components/ui/action-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { deleteOrganization, setActiveOrganization } from "../org/actions";
 
 type Organization = {
@@ -13,7 +13,7 @@ type Organization = {
 	name: string;
 	slug: string;
 	description: string | null;
-	status: string;
+	status: "active" | "inactive" | "pending";
 	isDefault: boolean;
 };
 
@@ -22,6 +22,7 @@ type OrganizationSwitcherProps = { organizations: Organization[] };
 export function OrganizationSwitcher({
 	organizations,
 }: OrganizationSwitcherProps) {
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -31,7 +32,7 @@ export function OrganizationSwitcher({
 	if (organizations.length === 0) {
 		return (
 			<p className="text-sm text-muted-foreground">
-				{authMessage("org.switcher.empty", "No organizations yet.")}
+				{t("org.switcher.empty")}
 			</p>
 		);
 	}
@@ -94,11 +95,15 @@ export function OrganizationSwitcher({
 						<div className="flex items-center gap-2">
 							<span className="text-sm font-medium">{org.name}</span>
 							{org.isDefault && (
-								<Badge>{authMessage("org.switcher.activeBadge", "Active")}</Badge>
+								<Badge>{t("org.switcher.activeBadge")}</Badge>
 							)}
 							{!org.isDefault && org.status !== "active" && (
 								<Badge variant="outline">
-									{authMessage(`org.status.${org.status}`, org.status)}
+									{(() => {
+										const statusKey: `org.status.${Organization["status"]}` = `org.status.${org.status}`;
+										const statusLabel = t(statusKey);
+										return statusLabel === statusKey ? org.status : statusLabel;
+									})()}
 								</Badge>
 							)}
 							<ActionButton
@@ -114,7 +119,7 @@ export function OrganizationSwitcher({
 							<p className="text-xs text-muted-foreground">{org.description}</p>
 						)}
 						<p className="text-xs text-muted-foreground">
-							{authMessage("org.switcher.slugLabel", "Slug:")} {org.slug}
+							{t("org.switcher.slugLabel")} {org.slug}
 						</p>
 					</div>
 					<Button
@@ -124,10 +129,10 @@ export function OrganizationSwitcher({
 						onClick={() => handleSelect(org.id)}
 					>
 						{org.isDefault
-							? authMessage("org.switcher.current", "Current")
+							? t("org.switcher.current")
 							: isPending
-								? authMessage("org.switcher.switching", "Switching...")
-								: authMessage("org.switcher.setActive", "Set active")}
+								? t("org.switcher.switching")
+								: t("org.switcher.setActive")}
 					</Button>
 				</div>
 			))}

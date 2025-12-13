@@ -1,8 +1,11 @@
+import type { DefaultAction } from "../../config/permissions";
 import {
 	OWNER_ROLE_KEY,
+	PERMISSION_KEYS,
 	type PermissionKey,
+	type PermissionResource,
 	permissionDefinitions,
-} from "./permissions";
+} from "../../config/permissions";
 
 export type RoleTemplate = {
 	key: string;
@@ -16,6 +19,33 @@ export type RoleTemplate = {
 const allPermissionKeys = permissionDefinitions.map(
 	(definition) => definition.key,
 );
+
+const grant = (
+	resource: PermissionResource,
+	actions: DefaultAction[],
+): PermissionKey[] =>
+	actions.map((action) => `${resource}:${action}` as PermissionKey);
+
+const orgAdminPermissions: PermissionKey[] = [...PERMISSION_KEYS];
+const orgMemberPermissions: PermissionKey[] = [
+	...grant("screens", ["view"]),
+	...grant("orders", ["view"]),
+	...grant("notifications", ["view"]),
+	...grant("analytics", ["view"]),
+];
+
+const teamLeadPermissions: PermissionKey[] = [
+	...grant("screens", ["view", "update"]),
+	...grant("orders", ["view", "update"]),
+	...grant("notifications", ["view", "update"]),
+	...grant("analytics", ["view"]),
+];
+
+const teamCollaboratorPermissions: PermissionKey[] = [
+	...grant("screens", ["view"]),
+	...grant("orders", ["view"]),
+	...grant("notifications", ["view"]),
+];
 
 /**
  * Default role templates used when a new organization is provisioned.
@@ -34,27 +64,14 @@ export const defaultRoleTemplates: RoleTemplate[] = [
 		name: "Administrator",
 		description: "Manage workspace settings, teams, and members",
 		scope: "organization",
-		permissions: [
-			"org:update",
-			"org:invite",
-			"org:teams",
-			"org:roles",
-			"team:create",
-			"team:update",
-			"team:delete",
-			"team:members",
-			"member:assign-role",
-			"member:remove",
-			"member:update",
-			"session:revoke",
-		],
+		permissions: orgAdminPermissions,
 	},
 	{
 		key: "org-member",
 		name: "Member",
 		description: "Baseline access for most workspace collaborators",
 		scope: "organization",
-		permissions: [],
+		permissions: orgMemberPermissions,
 		isDefault: true,
 	},
 	{
@@ -62,20 +79,14 @@ export const defaultRoleTemplates: RoleTemplate[] = [
 		name: "Team lead",
 		description: "Manage membership and settings for their team",
 		scope: "team",
-		permissions: [
-			"team:update",
-			"team:members",
-			"member:assign-role",
-			"member:remove",
-			"member:update",
-		],
+		permissions: teamLeadPermissions,
 	},
 	{
 		key: "team-collaborator",
 		name: "Team collaborator",
 		description: "Participate in team work without management permissions",
 		scope: "team",
-		permissions: [],
+		permissions: teamCollaboratorPermissions,
 		isDefault: true,
 	},
 ];

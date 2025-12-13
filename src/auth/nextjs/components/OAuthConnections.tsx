@@ -1,4 +1,4 @@
-import { authMessage } from "@/auth/config";
+import { getT } from "@/lib/i18n/actions";
 import { listOAuthConnections } from "../oauthActions";
 import { OAuthConnectionControls } from "./OAuthConnectionControls";
 
@@ -11,15 +11,13 @@ function formatDate(value: Date | null) {
 }
 
 export async function OAuthConnections() {
+	const { t } = await getT();
 	const connections = await listOAuthConnections();
 
 	if (connections.length === 0) {
 		return (
 			<p className="text-sm text-muted-foreground">
-				{authMessage(
-					"oauth.connections.empty",
-					"No OAuth providers are currently configured.",
-				)}
+				{t("oauth.connections.empty")}
 			</p>
 		);
 	}
@@ -30,11 +28,9 @@ export async function OAuthConnections() {
 				const connectedAt = formatDate(connection.connectedAt);
 				const statusCopy = connection.connected
 					? connectedAt
-						? authMessage("oauth.connections.connectedAt", "Connected {date}", {
-								date: connectedAt,
-							})
-						: authMessage("oauth.connections.connected", "Connected")
-					: authMessage("oauth.connections.notConnected", "Not connected");
+						? t("oauth.connections.connectedAt", { date: connectedAt })
+						: t("oauth.connections.connected")
+					: t("oauth.connections.notConnected");
 
 				return (
 					<div

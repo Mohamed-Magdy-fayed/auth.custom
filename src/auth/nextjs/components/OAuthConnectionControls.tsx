@@ -2,9 +2,9 @@
 
 import { useTransition } from "react";
 
-import { authMessage } from "@/auth/config";
 import type { OAuthProvider } from "@/auth/tables";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { oAuthSignIn } from "../actions";
 import { disconnectOAuthAccount } from "../oauthActions";
 
@@ -21,6 +21,7 @@ export function OAuthConnectionControls({
 	onDisconnected,
 	onError,
 }: OAuthConnectionControlsProps) {
+	const { t } = useTranslation();
 	const [isPending, startTransition] = useTransition();
 
 	if (connected) {
@@ -33,12 +34,7 @@ export function OAuthConnectionControls({
 					startTransition(async () => {
 						const result = await disconnectOAuthAccount(provider);
 						if (!result.success) {
-							const message =
-								result.message ??
-								authMessage(
-									"oauth.connections.disconnectFailed",
-									"Unable to remove connection.",
-								);
+							const message = result.message ?? t("oauth.connections.disconnectFailed");
 							if (onError) {
 								onError(message);
 								return;
@@ -51,8 +47,8 @@ export function OAuthConnectionControls({
 				}}
 			>
 				{isPending
-					? authMessage("oauth.connections.disconnecting", "Disconnecting...")
-					: authMessage("oauth.connections.disconnect", "Disconnect")}
+					? t("oauth.connections.disconnecting")
+					: t("oauth.connections.disconnect")}
 			</Button>
 		);
 	}
@@ -75,9 +71,7 @@ export function OAuthConnectionControls({
 				});
 			}}
 		>
-			{isPending
-				? authMessage("oauth.connections.connecting", "Connecting...")
-				: authMessage("oauth.connections.connect", "Connect")}
+			{isPending ? t("oauth.connections.connecting") : t("oauth.connections.connect")}
 		</Button>
 	);
 }

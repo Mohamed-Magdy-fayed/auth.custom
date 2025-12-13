@@ -3,7 +3,6 @@
 import { useCallback, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { authMessage } from "@/auth/config";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -14,6 +13,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 import { updateProfile } from "../profileActions";
 import type { UpdateProfileInput } from "../profileSchemas";
@@ -37,6 +37,7 @@ type FormValues = UpdateProfileInput & {
 };
 
 export function ProfileForm({ defaultValues }: ProfileFormProps) {
+	const { t } = useTranslation();
 	const [status, setStatus] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -113,14 +114,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{authMessage("profile.displayName.label", "Display name")}
+								{t("profile.displayName.label")}
 							</FormLabel>
 							<FormControl>
 								<Input
-									placeholder={authMessage(
-										"profile.displayName.placeholder",
-										"Your name",
-									)}
+									placeholder={t("profile.displayName.placeholder")}
 									{...field}
 								/>
 							</FormControl>
@@ -135,14 +133,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{authMessage("profile.givenName.label", "Given name")}
+									{t("profile.givenName.label")}
 								</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={authMessage(
-											"profile.givenName.placeholder",
-											"First name",
-										)}
+										placeholder={t("profile.givenName.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -156,14 +151,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{authMessage("profile.familyName.label", "Family name")}
+									{t("profile.familyName.label")}
 								</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={authMessage(
-											"profile.familyName.placeholder",
-											"Last name",
-										)}
+										placeholder={t("profile.familyName.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -178,10 +170,10 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						name="locale"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>{authMessage("profile.locale.label", "Locale")}</FormLabel>
+								<FormLabel>{t("profile.locale.label")}</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={authMessage("profile.locale.placeholder", "en")}
+										placeholder={t("profile.locale.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -195,11 +187,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{authMessage("profile.timezone.label", "Timezone")}
+									{t("profile.timezone.label")}
 								</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={authMessage("profile.timezone.placeholder", "UTC")}
+										placeholder={t("profile.timezone.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -210,9 +202,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 				</div>
 				<div className="flex justify-end">
 					<Button type="submit" disabled={isPending}>
-						{isPending
-							? authMessage("profile.form.saving", "Saving...")
-							: authMessage("profile.form.submit", "Save changes")}
+						{isPending ? t("profile.form.saving") : t("profile.form.submit")}
 					</Button>
 				</div>
 			</form>
