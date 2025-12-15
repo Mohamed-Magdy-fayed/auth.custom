@@ -114,11 +114,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("profile.displayName.label")}
+								{t("authTranslations.profile.displayName.label")}
 							</FormLabel>
 							<FormControl>
 								<Input
-									placeholder={t("profile.displayName.placeholder")}
+									placeholder={t("authTranslations.profile.displayName.placeholder")}
 									{...field}
 								/>
 							</FormControl>
@@ -133,11 +133,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{t("profile.givenName.label")}
+									{t("authTranslations.profile.givenName.label")}
 								</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={t("profile.givenName.placeholder")}
+										placeholder={t("authTranslations.profile.givenName.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -151,11 +151,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{t("profile.familyName.label")}
+									{t("authTranslations.profile.familyName.label")}
 								</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={t("profile.familyName.placeholder")}
+										placeholder={t("authTranslations.profile.familyName.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -170,10 +170,10 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						name="locale"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>{t("profile.locale.label")}</FormLabel>
+								<FormLabel>{t("authTranslations.profile.locale.label")}</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={t("profile.locale.placeholder")}
+										placeholder={t("authTranslations.profile.locale.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -187,11 +187,11 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{t("profile.timezone.label")}
+									{t("authTranslations.profile.timezone.label")}
 								</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={t("profile.timezone.placeholder")}
+										placeholder={t("authTranslations.profile.timezone.placeholder")}
 										{...field}
 									/>
 								</FormControl>
@@ -202,7 +202,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
 				</div>
 				<div className="flex justify-end">
 					<Button type="submit" disabled={isPending}>
-						{isPending ? t("profile.form.saving") : t("profile.form.submit")}
+						{isPending ? t("authTranslations.profile.form.saving") : t("authTranslations.profile.form.submit")}
 					</Button>
 				</div>
 			</form>

@@ -5,11 +5,9 @@ import { headers } from "next/headers";
 import { type ZodError, z } from "zod";
 import { comparePasswords } from "@/auth/core/passwordHasher";
 import { createTokenValue, hashTokenValue } from "@/auth/core/token";
-import {
-	UserCredentialsTable,
-	UsersTable,
-	UserTokensTable,
-} from "@/auth/tables";
+import { UserCredentialsTable } from "@/auth/tables/user-credentials-table";
+import { UserTokensTable } from "@/auth/tables/user-tokens-table";
+import { UsersTable } from "@/auth/tables/users-table";
 import { db } from "@/drizzle/db";
 import { getT } from "@/lib/i18n/actions";
 import { getCurrentUser } from "./currentUser";
@@ -19,6 +17,8 @@ import { type ChangeEmailInput, changeEmailSchema } from "./profileSchemas";
 
 const EMAIL_VERIFICATION_TOKEN_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
+type TFunction = Awaited<ReturnType<typeof getT>>["t"];
+
 type ActionResult = {
 	success: boolean;
 	message: string;
@@ -26,12 +26,6 @@ type ActionResult = {
 };
 
 type VerifyResult = { status: "success" | "error"; message: string };
-
-type Translator = (
-	key: string,
-	fallback: string,
-	args?: Record<string, unknown>,
-) => string;
 
 type EmailTokenMetadata = {
 	operation?: unknown;
@@ -41,15 +35,6 @@ type EmailTokenMetadata = {
 };
 
 type EmailTokenRecord = { id: string; userId: string };
-
-async function getTranslator(): Promise<Translator> {
-	const { t } = await getT();
-
-	return (key, fallback, args) => {
-		const value = t(key as any, args as any);
-		return value === key ? fallback : value;
-	};
-}
 
 function normalizeEmail(email: string) {
 	return email.trim().toLowerCase();
@@ -67,7 +52,7 @@ function buildVerificationUrl(origin: string, token: string) {
 	return `${origin}/verify-email?${searchParams.toString()}`;
 }
 
-function validationError(error: ZodError, tr: Translator): ActionResult {
+function validationError(error: ZodError, t: TFunction): ActionResult {
 	const flat = z.treeifyError(error);
 	const fieldErrors = Object.fromEntries(
 		Object.entries(flat.errors)
@@ -77,7 +62,7 @@ function validationError(error: ZodError, tr: Translator): ActionResult {
 
 	return {
 		success: false,
-		message: tr("profile.error.invalidInput", "Invalid input"),
+		message: t("authTranslations.profile.error.invalidInput"),
 		fieldErrors,
 	};
 }
@@ -85,7 +70,7 @@ function validationError(error: ZodError, tr: Translator): ActionResult {
 export async function requestEmailChange(
 	unsafeData: ChangeEmailInput,
 ): Promise<ActionResult> {
-	const tr = await getTranslator();
+	const { t } = await getT();
 	const currentUser = await getCurrentUser({
 		redirectIfNotFound: true,
 		withFullUser: true,
@@ -93,7 +78,7 @@ export async function requestEmailChange(
 	const parsed = changeEmailSchema.safeParse(unsafeData);
 
 	if (!parsed.success) {
-		return validationError(parsed.error, tr);
+		return validationError(parsed.error, t);
 	}
 
 	const { newEmail, currentPassword } = parsed.data;
@@ -101,10 +86,7 @@ export async function requestEmailChange(
 	const normalizedCurrentEmail = normalizeEmail(currentUser.email);
 
 	if (normalizedNewEmail === normalizedCurrentEmail) {
-		const message = tr(
-			"profile.email.error.sameAddress",
-			"Use a different email address",
-		);
+		const message = t("authTranslations.profile.email.error.sameAddress");
 		return { success: false, message, fieldErrors: { newEmail: message } };
 	}
 
@@ -114,10 +96,7 @@ export async function requestEmailChange(
 	});
 
 	if (existingUser) {
-		const message = tr(
-			"profile.email.error.inUse",
-			"Email is already in use",
-		);
+		const message = t("authTranslations.profile.email.error.inUse");
 		return { success: false, message, fieldErrors: { newEmail: message } };
 	}
 
@@ -128,10 +107,7 @@ export async function requestEmailChange(
 
 	if (credentials?.passwordHash) {
 		if (!currentPassword) {
-			const message = tr(
-				"profile.email.error.passwordRequired",
-				"Enter your current password",
-			);
+			const message = t("authTranslations.profile.email.error.passwordRequired");
 			return {
 				success: false,
 				message,
@@ -146,10 +122,7 @@ export async function requestEmailChange(
 		});
 
 		if (!isValid) {
-			const message = tr(
-				"profile.email.error.passwordIncorrect",
-				"Current password is incorrect",
-			);
+			const message = t("authTranslations.profile.email.error.passwordIncorrect");
 			return {
 				success: false,
 				message,
@@ -191,13 +164,7 @@ export async function requestEmailChange(
 	const origin = await resolveOrigin();
 
 	if (!origin) {
-		return {
-			success: false,
-			message: tr(
-				"profile.email.error.missingOrigin",
-				"Unable to determine application URL",
-			),
-		};
+		return { success: false, message: t("authTranslations.profile.email.error.missingOrigin") };
 	}
 
 	const verificationUrl = buildVerificationUrl(origin, token);
@@ -211,39 +178,21 @@ export async function requestEmailChange(
 		});
 	} catch (error) {
 		console.error("Failed to send email change verification", error);
-		return {
-			success: false,
-			message: tr(
-				"profile.email.error.sendFailed",
-				"We couldn't send the verification email. Please try again.",
-			),
-		};
+		return { success: false, message: t("authTranslations.profile.email.error.sendFailed") };
 	}
 
-	return {
-		success: true,
-		message: tr(
-			"profile.email.success.changeRequested",
-			"Check your new inbox for a verification link.",
-		),
-	};
+	return { success: true, message: t("authTranslations.profile.email.success.changeRequested") };
 }
 
 export async function sendEmailVerification(): Promise<ActionResult> {
-	const tr = await getTranslator();
+	const { t } = await getT();
 	const currentUser = await getCurrentUser({
 		redirectIfNotFound: true,
 		withFullUser: true,
 	});
 
 	if (currentUser.emailVerifiedAt) {
-		return {
-			success: true,
-			message: tr(
-				"emailVerification.alreadyVerified",
-				"Your email is already verified.",
-			),
-		};
+		return { success: true, message: t("authTranslations.emailVerification.alreadyVerified") };
 	}
 
 	const origin = await resolveOrigin();
@@ -251,10 +200,7 @@ export async function sendEmailVerification(): Promise<ActionResult> {
 	if (!origin) {
 		return {
 			success: false,
-			message: tr(
-				"emailVerification.error.missingOrigin",
-				"Unable to determine application URL",
-			),
+			message: t("authTranslations.emailVerification.error.missingOrigin"),
 		};
 	}
 
@@ -296,29 +242,17 @@ export async function sendEmailVerification(): Promise<ActionResult> {
 		});
 	} catch (error) {
 		console.error("Failed to send email verification", error);
-		return {
-			success: false,
-			message: tr(
-				"emailVerification.error.sendFailed",
-				"We couldn't send the verification email. Please try again.",
-			),
-		};
+		return { success: false, message: t("authTranslations.emailVerification.error.sendFailed") };
 	}
 
-	return {
-		success: true,
-		message: tr(
-			"emailVerification.sent",
-			"Check your inbox and follow the link to verify your email.",
-		),
-	};
+	return { success: true, message: t("authTranslations.emailVerification.sent") };
 }
 
 async function completeEmailChange(
 	record: EmailTokenRecord,
 	metadata: EmailTokenMetadata,
 	now: Date,
-	tr: Translator,
+	t: TFunction,
 ): Promise<VerifyResult> {
 	const newEmail =
 		typeof metadata.newEmail === "string" ? metadata.newEmail : null;
@@ -332,10 +266,7 @@ async function completeEmailChange(
 	if (!newEmail || !normalizedEmail) {
 		return {
 			status: "error",
-			message: tr(
-				"emailVerification.error.unableToVerify",
-				"Unable to verify email change.",
-			),
+			message: t("authTranslations.emailVerification.error.unableToVerify"),
 		};
 	}
 
@@ -348,13 +279,7 @@ async function completeEmailChange(
 	});
 
 	if (conflict) {
-		return {
-			status: "error",
-			message: tr(
-				"emailVerification.error.conflict",
-				"This email is already associated with another account.",
-			),
-		};
+		return { status: "error", message: t("authTranslations.emailVerification.error.conflict") };
 	}
 
 	try {
@@ -387,27 +312,18 @@ async function completeEmailChange(
 		console.error("Failed to finalize email change verification", error);
 		return {
 			status: "error",
-			message: tr(
-				"emailVerification.error.unableToVerify",
-				"Unable to verify email change.",
-			),
+			message: t("authTranslations.emailVerification.error.unableToVerify"),
 		};
 	}
 
-	return {
-		status: "success",
-		message: tr(
-			"emailVerification.success.changed",
-			"Email updated successfully.",
-		),
-	};
+	return { status: "success", message: t("authTranslations.emailVerification.success.changed") };
 }
 
 async function completeEmailVerification(
 	record: EmailTokenRecord,
 	metadata: EmailTokenMetadata,
 	now: Date,
-	tr: Translator,
+	t: TFunction,
 ): Promise<VerifyResult> {
 	const user = await db.query.UsersTable.findFirst({
 		columns: { id: true, emailNormalized: true, status: true },
@@ -415,13 +331,7 @@ async function completeEmailVerification(
 	});
 
 	if (!user) {
-		return {
-			status: "error",
-			message: tr(
-				"emailVerification.error.generic",
-				"We could not verify your email. Please request a new link.",
-			),
-		};
+		return { status: "error", message: t("authTranslations.emailVerification.error.generic") };
 	}
 
 	const normalizedEmail =
@@ -432,10 +342,7 @@ async function completeEmailVerification(
 	if (normalizedEmail && normalizedEmail !== user.emailNormalized) {
 		return {
 			status: "error",
-			message: tr(
-				"emailVerification.error.invalidToken",
-				"Invalid email verification link.",
-			),
+			message: t("authTranslations.emailVerification.error.invalidToken"),
 		};
 	}
 
@@ -465,34 +372,19 @@ async function completeEmailVerification(
 		});
 	} catch (error) {
 		console.error("Failed to finalize email verification", error);
-		return {
-			status: "error",
-			message: tr(
-				"emailVerification.error.generic",
-				"We could not verify your email. Please request a new link.",
-			),
-		};
+		return { status: "error", message: t("authTranslations.emailVerification.error.generic") };
 	}
 
-	return {
-		status: "success",
-		message: tr(
-			"emailVerification.success.verified",
-			"Email verified successfully.",
-		),
-	};
+	return { status: "success", message: t("authTranslations.emailVerification.success.verified") };
 }
 
 export async function verifyEmailToken(token: string): Promise<VerifyResult> {
-	const tr = await getTranslator();
+	const { t } = await getT();
 
 	if (!token || token.length === 0) {
 		return {
 			status: "error",
-			message: tr(
-				"emailVerification.error.invalidToken",
-				"Invalid email verification link.",
-			),
+			message: t("authTranslations.emailVerification.error.invalidToken"),
 		};
 	}
 
@@ -514,33 +406,24 @@ export async function verifyEmailToken(token: string): Promise<VerifyResult> {
 	if (!record) {
 		return {
 			status: "error",
-			message: tr(
-				"emailVerification.error.invalidToken",
-				"Invalid email verification link.",
-			),
+			message: t("authTranslations.emailVerification.error.invalidToken"),
 		};
 	}
 
 	const now = new Date();
 
 	if (record.consumedAt != null || record.expiresAt.getTime() <= now.getTime()) {
-		return {
-			status: "error",
-			message: tr(
-				"emailVerification.error.expired",
-				"This verification link has expired.",
-			),
-		};
+		return { status: "error", message: t("authTranslations.emailVerification.error.expired") };
 	}
 
 	const metadata = (record.metadata ?? {}) as EmailTokenMetadata;
 	const operation = metadata.operation === "change" ? "change" : "verify";
 
 	if (operation === "change") {
-		return completeEmailChange(record, metadata, now, tr);
+		return completeEmailChange(record, metadata, now, t);
 	}
 
-	return completeEmailVerification(record, metadata, now, tr);
+	return completeEmailVerification(record, metadata, now, t);
 }
 
 export { verifyEmailToken as verifyEmailChange };

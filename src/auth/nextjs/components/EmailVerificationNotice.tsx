@@ -21,7 +21,7 @@ export function EmailVerificationNotice({
 	if (isVerified) {
 		return (
 			<p className="text-sm text-muted-foreground">
-				{t("emailVerification.alreadyVerifiedNote")}
+				{t("authTranslations.emailVerification.alreadyVerifiedNote")}
 			</p>
 		);
 	}
@@ -29,10 +29,10 @@ export function EmailVerificationNotice({
 	return (
 		<div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
 			<p className="font-medium">
-				{t("emailVerification.notice.title")}
+				{t("authTranslations.emailVerification.notice.title")}
 			</p>
 			<p className="mt-1">
-				{t("emailVerification.notice.description")}
+				{t("authTranslations.emailVerification.notice.description")}
 			</p>
 			{status && (
 				<p
@@ -56,8 +56,8 @@ export function EmailVerificationNotice({
 				}}
 			>
 				{isPending
-					? t("emailVerification.notice.sending")
-					: t("emailVerification.notice.sendButton")}
+					? t("authTranslations.emailVerification.notice.sending")
+					: t("authTranslations.emailVerification.notice.sendButton")}
 			</Button>
 		</div>
 	);

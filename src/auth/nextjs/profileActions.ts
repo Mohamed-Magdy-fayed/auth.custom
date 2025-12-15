@@ -10,7 +10,8 @@ import {
 	hashPassword,
 } from "@/auth/core/passwordHasher";
 import { createSession } from "@/auth/core/session";
-import { UserCredentialsTable, UsersTable } from "@/auth/tables";
+import { UserCredentialsTable } from "@/auth/tables/user-credentials-table";
+import { UsersTable } from "@/auth/tables/users-table";
 import { db } from "@/drizzle/db";
 
 import { getCurrentUser } from "./currentUser";
@@ -55,7 +56,6 @@ export async function updateProfile(
 		.set({ name: parsed.data.name })
 		.where(eq(UsersTable.id, currentUser.id));
 
-	revalidatePath("/");
 	revalidatePath("/");
 
 	return { success: true, message: "Profile updated" };

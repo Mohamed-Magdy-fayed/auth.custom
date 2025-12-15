@@ -1,12 +1,7 @@
-// Centralized feature toggles so teams can flip auth capabilities in one place before copying this folder.
 export type AuthFeature =
 	| "password"
 	| "passkeys"
 	| "oauth"
-	| "sessions"
-	| "organizations"
-	| "teams"
-	| "magicLinks";
 
 export type FeatureConfig = Partial<Record<AuthFeature, boolean>>;
 
@@ -14,10 +9,6 @@ export const FEATURE_DEFAULTS: FeatureConfig = {
 	password: true,
 	passkeys: true,
 	oauth: true,
-	sessions: false,
-	organizations: false,
-	teams: false,
-	magicLinks: false,
 };
 
 let activeFeatureConfig: FeatureConfig = { ...FEATURE_DEFAULTS };

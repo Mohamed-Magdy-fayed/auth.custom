@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 
-import type { OAuthProvider } from "@/auth/tables";
+import type { OAuthProvider } from "@/auth/tables/user-oauth-accounts-table";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { oAuthSignIn } from "../actions";
@@ -34,7 +34,7 @@ export function OAuthConnectionControls({
 					startTransition(async () => {
 						const result = await disconnectOAuthAccount(provider);
 						if (!result.success) {
-							const message = result.message ?? t("oauth.connections.disconnectFailed");
+							const message = result.message ?? t("authTranslations.oauth.connections.disconnectFailed");
 							if (onError) {
 								onError(message);
 								return;
@@ -47,8 +47,8 @@ export function OAuthConnectionControls({
 				}}
 			>
 				{isPending
-					? t("oauth.connections.disconnecting")
-					: t("oauth.connections.disconnect")}
+					? t("authTranslations.oauth.connections.disconnecting")
+					: t("authTranslations.oauth.connections.disconnect")}
 			</Button>
 		);
 	}
@@ -71,7 +71,7 @@ export function OAuthConnectionControls({
 				});
 			}}
 		>
-			{isPending ? t("oauth.connections.connecting") : t("oauth.connections.connect")}
+			{isPending ? t("authTranslations.oauth.connections.connecting") : t("authTranslations.oauth.connections.connect")}
 		</Button>
 	);
 }

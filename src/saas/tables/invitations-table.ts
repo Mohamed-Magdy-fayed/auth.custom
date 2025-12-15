@@ -1,6 +1,7 @@
 import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { TeamsTable, UsersTable } from "@/auth/tables";
+import { OrganizationsTable } from "@/auth/tables/organizations-table";
 import { createdAt, id, updatedAt } from "@/auth/tables/schema-helpers";
+import { UsersTable } from "@/auth/tables/users-table";
 
 export const invitationStatusValues = [
 	"pending",
@@ -18,11 +19,10 @@ export const InvitationsTable = pgTable("saas_invitations", {
 	id,
 	createdAt,
 	updatedAt,
-	teamId: uuid("team_id")
+	organizationId: uuid("organization_id")
 		.notNull()
-		.references(() => TeamsTable.id, { onDelete: "cascade" }),
+		.references(() => OrganizationsTable.id, { onDelete: "cascade" }),
 	email: text("email").notNull(),
-	roleKey: text("role_key").notNull(),
 	invitedByUserId: uuid("invited_by_user_id").references(() => UsersTable.id, {
 		onDelete: "set null",
 	}),

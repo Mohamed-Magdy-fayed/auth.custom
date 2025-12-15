@@ -2,12 +2,13 @@
 
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { UserCredentialsTable } from "@/auth/tables/user-credentials-table";
 import {
 	OAuthProvider,
-	UserCredentialsTable,
 	UserOAuthAccountsTable,
-} from "@/auth/tables";
+} from "@/auth/tables/user-oauth-accounts-table";
 import { db } from "@/drizzle/db";
+import { getT } from "@/lib/i18n/actions";
 import {
 	getConfiguredOAuthProviders,
 	providerDisplayNames,
@@ -41,6 +42,7 @@ export async function listOAuthConnections() {
 }
 
 export async function disconnectOAuthAccount(provider: OAuthProvider) {
+	const { t } = await getT();
 	const user = await getCurrentUser({ redirectIfNotFound: true });
 
 	const account = await db.query.UserOAuthAccountsTable.findFirst({
@@ -52,7 +54,7 @@ export async function disconnectOAuthAccount(provider: OAuthProvider) {
 	});
 
 	if (!account) {
-		return { success: false, message: "Provider is not linked" };
+		return { success: false, message: t("authTranslations.oauth.connections.notLinked") };
 	}
 
 	const [credentialCount, providerCount] = await Promise.all([
@@ -70,7 +72,7 @@ export async function disconnectOAuthAccount(provider: OAuthProvider) {
 	const totalProviders = Number(providerCount[0]?.count ?? 0);
 
 	if (!hasPassword && totalProviders <= 1) {
-		return { success: false, message: "Cannot remove the only sign-in method" };
+		return { success: false, message: t("authTranslations.oauth.connections.onlyMethod") };
 	}
 
 	await db
@@ -84,5 +86,5 @@ export async function disconnectOAuthAccount(provider: OAuthProvider) {
 
 	revalidatePath("/");
 
-	return { success: true, message: "Connection removed" };
+	return { success: true, message: t("authTranslations.oauth.connections.disconnectSuccess") };
 }

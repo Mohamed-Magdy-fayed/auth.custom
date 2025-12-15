@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
 	pgEnum,
 	pgTable,
@@ -5,8 +6,14 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-
+import { ActivityLogsTable } from "@/saas/tables/activity-logs-table";
+import { InvitationsTable } from "@/saas/tables/invitations-table";
+import { BiometricCredentialsTable } from "./biometric-credentials-table";
+import { OrganizationMembershipsTable } from "./organization-memberships-table";
 import { createdAt, id, updatedAt } from "./schema-helpers";
+import { UserCredentialsTable } from "./user-credentials-table";
+import { UserOAuthAccountsTable } from "./user-oauth-accounts-table";
+import { UserTokensTable } from "./user-tokens-table";
 
 export const userStatusValues = [
 	"active",
@@ -15,30 +22,44 @@ export const userStatusValues = [
 	"suspended",
 ] as const;
 export type UserStatus = (typeof userStatusValues)[number];
-export const userStatusEnum = pgEnum("auth_user_status", userStatusValues);
+export const userStatusEnum = pgEnum("user_status", userStatusValues);
 
 export const UsersTable = pgTable(
-	"auth_users",
+	"users",
 	{
 		id,
-		email: text("email").notNull(),
-		emailNormalized: text("email_normalized").notNull(),
-		displayName: text("display_name"),
-		name: text("name"),
-		givenName: text("given_name"),
-		familyName: text("family_name"),
-		avatarUrl: text("avatar_url"),
-		locale: text("locale"),
-		timezone: text("timezone"),
+		email: text().notNull(),
+		emailNormalized: text().notNull(),
+		displayName: text(),
+		name: text(),
+		givenName: text(),
+		familyName: text(),
+		avatarUrl: text(),
+		locale: text(),
+		timezone: text(),
 		status: userStatusEnum().notNull().default("active"),
-		emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
-		lastSignInAt: timestamp("last_sign_in_at", { withTimezone: true }),
+		emailVerifiedAt: timestamp({ withTimezone: true }),
+		lastSignInAt: timestamp({ withTimezone: true }),
 		createdAt,
 		updatedAt,
 	},
-	(table) => ({
-		emailNormalizedUnique: uniqueIndex("auth_users_email_normalized_unique").on(
-			table.emailNormalized,
-		),
-	}),
+	(table) => [
+		uniqueIndex("users_email_normalized_unique").on(table.emailNormalized),
+	],
 );
+
+export const usersRelations = relations(UsersTable, ({ many, one }) => ({
+	credentials: one(UserCredentialsTable, {
+		fields: [UsersTable.id],
+		references: [UserCredentialsTable.userId],
+	}),
+	oauthAccounts: many(UserOAuthAccountsTable),
+	organizationMemberships: many(OrganizationMembershipsTable),
+	tokens: many(UserTokensTable),
+	biometricCredentials: many(BiometricCredentialsTable),
+	activityLogs: many(ActivityLogsTable),
+	invitationsSent: many(InvitationsTable, { relationName: "invitationSender" }),
+}));
+
+export type User = typeof UsersTable.$inferSelect;
+export type NewUser = typeof UsersTable.$inferInsert;

@@ -3,7 +3,7 @@
 import { startRegistration } from "@simplewebauthn/browser";
 import { useMemo, useState } from "react";
 
-import { isFeatureEnabled } from "@/auth/config";
+import { isFeatureEnabled } from "@/auth/config/features";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import {
@@ -22,13 +22,6 @@ export function PasskeyManager({
 	initialPasskeys: PasskeyListItem[];
 }) {
 	const { t } = useTranslation();
-	const tr = useMemo(
-		() => (key: string, fallback: string, args?: Record<string, unknown>) => {
-			const value = t(key as any, args as any);
-			return value === key ? fallback : value;
-		},
-		[t],
-	);
 	const featureEnabled = useMemo(() => isFeatureEnabled("passkeys"), []);
 	const [passkeys, setPasskeys] = useState(initialPasskeys);
 	const [status, setStatus] = useState<Status>(null);
@@ -47,10 +40,7 @@ export function PasskeyManager({
 		if (!featureEnabled) {
 			setStatus({
 				type: "error",
-				message: tr(
-					"passkeys.featureDisabled",
-					"Passkey authentication is disabled for this workspace.",
-				),
+				message: t("authTranslations.passkeys.featureDisabled"),
 			});
 			return;
 		}
@@ -58,10 +48,7 @@ export function PasskeyManager({
 		if (typeof window === "undefined" || !window.PublicKeyCredential) {
 			setStatus({
 				type: "error",
-				message: tr(
-					"passkeys.register.unsupported",
-					"Passkeys are not supported in this browser.",
-				),
+				message: t("authTranslations.passkeys.register.unsupported"),
 			});
 			return;
 		}
@@ -94,10 +81,7 @@ export function PasskeyManager({
 			) {
 				setStatus({
 					type: "error",
-					message: tr(
-						"passkeys.register.cancelled",
-						"Passkey registration was cancelled.",
-					),
+					message: t("authTranslations.passkeys.register.cancelled"),
 				});
 				return;
 			}
@@ -105,7 +89,7 @@ export function PasskeyManager({
 			console.error("Passkey registration failed", caught);
 			setStatus({
 				type: "error",
-				message: tr("passkeys.register.error", "Unable to add passkey."),
+				message: t("authTranslations.passkeys.register.error"),
 			});
 		} finally {
 			setIsRegistering(false);
@@ -119,10 +103,7 @@ export function PasskeyManager({
 		if (!featureEnabled) {
 			setStatus({
 				type: "error",
-				message: tr(
-					"passkeys.featureDisabled",
-					"Passkey authentication is disabled for this workspace.",
-				),
+				message: t("authTranslations.passkeys.featureDisabled"),
 			});
 			setBusyId(null);
 			return;
@@ -141,7 +122,7 @@ export function PasskeyManager({
 			console.error("Passkey removal failed", caught);
 			setStatus({
 				type: "error",
-				message: tr("passkeys.delete.error", "Unable to remove passkey."),
+				message: t("authTranslations.passkeys.delete.error"),
 			});
 		} finally {
 			setBusyId(null);
@@ -151,10 +132,7 @@ export function PasskeyManager({
 	if (!featureEnabled) {
 		return (
 			<div className="rounded border border-dashed px-3 py-4 text-sm text-muted-foreground">
-				{tr(
-					"passkeys.featureDisabled",
-					"Passkey authentication is disabled for this workspace.",
-				)}
+				{t("authTranslations.passkeys.featureDisabled")}
 			</div>
 		);
 	}
@@ -174,21 +152,16 @@ export function PasskeyManager({
 			)}
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<p className="text-sm text-muted-foreground">
-					{tr(
-						"passkeys.settings.description",
-						"Register a passkey to sign in without a password.",
-					)}
+					{t("authTranslations.passkeys.settings.description")}
 				</p>
 				<Button disabled={isRegistering} onClick={handleRegister}>
-					{isRegistering
-						? tr("passkeys.registering", "Waiting for passkey...")
-						: tr("passkeys.add", "Add passkey")}
+					{isRegistering ? t("authTranslations.passkeys.registering") : t("authTranslations.passkeys.add")}
 				</Button>
 			</div>
 			<ul className="space-y-3">
 				{passkeys.length === 0 && (
 					<li className="rounded border border-dashed px-3 py-4 text-sm text-muted-foreground">
-						{tr("passkeys.list.empty", "No passkeys added yet.")}
+						{t("authTranslations.passkeys.list.empty")}
 					</li>
 				)}
 				{passkeys.map((item) => (
@@ -198,15 +171,15 @@ export function PasskeyManager({
 					>
 						<div className="space-y-1">
 							<p className="font-medium">
-								{item.label ?? tr("passkeys.list.defaultLabel", "Passkey")}
+								{item.label ?? t("authTranslations.passkeys.list.defaultLabel")}
 							</p>
 							<p className="text-xs text-muted-foreground">
-								{tr("passkeys.list.created", "Created")}{" "}
+								{t("authTranslations.passkeys.list.created")} {" "}
 								{new Date(item.createdAt).toLocaleString()}
 							</p>
 							{item.lastUsedAt && (
 								<p className="text-xs text-muted-foreground">
-									{tr("passkeys.list.lastUsed", "Last used")}{" "}
+									{t("authTranslations.passkeys.list.lastUsed")} {" "}
 									{new Date(item.lastUsedAt).toLocaleString()}
 								</p>
 							)}
@@ -217,8 +190,8 @@ export function PasskeyManager({
 							onClick={() => handleDelete(item.id)}
 						>
 							{busyId === item.id
-								? tr("passkeys.deleting", "Removing...")
-								: tr("passkeys.delete", "Remove")}
+								? t("authTranslations.passkeys.deleting")
+								: t("authTranslations.passkeys.delete.label")}
 						</Button>
 					</li>
 				))}

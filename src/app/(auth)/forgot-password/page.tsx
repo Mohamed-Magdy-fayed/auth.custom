@@ -10,27 +10,14 @@ import { getT } from "@/lib/i18n/actions";
 
 export default async function ForgotPasswordPage() {
 	const { t } = await getT();
-	const tr = (
-		key: string,
-		fallback: string,
-		args?: Record<string, unknown>,
-	) => {
-		const value = t(key as any, args as any);
-		return value === key ? fallback : value;
-	};
 
 	return (
 		<div className="container mx-auto p-4 max-w-[650px]">
 			<Card>
 				<CardHeader>
-					<CardTitle>
-						{tr("passwordReset.forgot.title", "Forgot password")}
-					</CardTitle>
+					<CardTitle>{t("authTranslations.passwordReset.forgot.title")}</CardTitle>
 					<CardDescription>
-						{tr(
-							"passwordReset.forgot.description",
-							"Enter the email on your account and we will send a 6-digit reset code.",
-						)}
+						{t("authTranslations.passwordReset.forgot.description")}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>

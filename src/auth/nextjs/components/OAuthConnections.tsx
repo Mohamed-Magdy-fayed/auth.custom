@@ -17,7 +17,7 @@ export async function OAuthConnections() {
 	if (connections.length === 0) {
 		return (
 			<p className="text-sm text-muted-foreground">
-				{t("oauth.connections.empty")}
+				{t("authTranslations.oauth.connections.empty")}
 			</p>
 		);
 	}
@@ -28,9 +28,9 @@ export async function OAuthConnections() {
 				const connectedAt = formatDate(connection.connectedAt);
 				const statusCopy = connection.connected
 					? connectedAt
-						? t("oauth.connections.connectedAt", { date: connectedAt })
-						: t("oauth.connections.connected")
-					: t("oauth.connections.notConnected");
+						? t("authTranslations.oauth.connections.connectedAt", { date: connectedAt })
+						: t("authTranslations.oauth.connections.connected")
+					: t("authTranslations.oauth.connections.notConnected");
 
 				return (
 					<div

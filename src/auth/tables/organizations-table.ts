@@ -1,17 +1,30 @@
-import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-
+import { relations } from "drizzle-orm";
+import { jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { OrganizationMembershipsTable } from "./organization-memberships-table";
+import { createdAt, id, updatedAt } from "./schema-helpers";
 import { UsersTable } from "./users-table";
 
-export const OrganizationsTable = pgTable("auth_organizations", {
-	id: uuid().primaryKey().defaultRandom(),
+export const OrganizationsTable = pgTable("organizations", {
+	id,
 	name: text().notNull(),
 	slug: text().notNull().unique(),
 	description: text(),
 	metadata: jsonb().$type<Record<string, unknown>>(),
 	createdById: uuid().references(() => UsersTable.id, { onDelete: "set null" }),
-	createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-	updatedAt: timestamp({ withTimezone: true })
-		.notNull()
-		.defaultNow()
-		.$onUpdate(() => new Date()),
+	createdAt,
+	updatedAt,
 });
+
+export const organizationsRelations = relations(
+	OrganizationsTable,
+	({ many, one }) => ({
+		memberships: many(OrganizationMembershipsTable),
+		createdBy: one(UsersTable, {
+			fields: [OrganizationsTable.createdById],
+			references: [UsersTable.id],
+		}),
+	}),
+);
+
+export type Organization = typeof OrganizationsTable.$inferSelect;
+export type NewOrganization = typeof OrganizationsTable.$inferInsert;

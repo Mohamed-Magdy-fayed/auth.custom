@@ -10,7 +10,7 @@ import {
 	User as UserIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { isFeatureEnabled } from "@/auth/config";
+import { isFeatureEnabled } from "@/auth/config/features";
 import { LogOutButton } from "@/auth/nextjs/components/LogOutButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

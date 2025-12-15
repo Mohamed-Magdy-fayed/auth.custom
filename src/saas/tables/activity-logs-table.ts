@@ -1,6 +1,7 @@
 import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { TeamsTable, UsersTable } from "@/auth/tables";
+import { OrganizationsTable } from "@/auth/tables/organizations-table";
 import { createdAt, id } from "@/auth/tables/schema-helpers";
+import { UsersTable } from "@/auth/tables/users-table";
 
 export const activityTypeValues = [
 	"SIGN_UP",
@@ -38,9 +39,9 @@ export const activityTypeEnum = pgEnum(
 export const ActivityLogsTable = pgTable("saas_activity_logs", {
 	id,
 	createdAt,
-	teamId: uuid("team_id")
+	organizationId: uuid("organization_id")
 		.notNull()
-		.references(() => TeamsTable.id, { onDelete: "cascade" }),
+		.references(() => OrganizationsTable.id, { onDelete: "cascade" }),
 	userId: uuid("user_id").references(() => UsersTable.id, {
 		onDelete: "set null",
 	}),

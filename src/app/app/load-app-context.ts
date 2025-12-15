@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 
-import { isFeatureEnabled } from "@/auth/config";
+import { isFeatureEnabled } from "@/auth/config/features";
 import { listPasskeys } from "@/auth/features/passkeys/server/actions";
 import { getCurrentUser } from "@/auth/nextjs/currentUser";
-import { UserCredentialsTable } from "@/auth/tables";
+import { UserCredentialsTable } from "@/auth/tables/user-credentials-table";
 import { db } from "@/drizzle/db";
 
 export type AppShellContext = Awaited<ReturnType<typeof loadAppContext>>;

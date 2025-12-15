@@ -132,9 +132,7 @@ export type TFunction<T extends Record<string, LanguageMessages>> = <
 	P extends keyof MergedArgsMap<T> & string,
 >(
 	key: P,
-	...args: MergedArgsMap<T>[P] extends Record<string, never>
-		? []
-		: [MergedArgsMap<T>[P]]
+	args?: MergedArgsMap<T>[P]
 ) => string;
 
 // The factory function that creates the i18n instance.

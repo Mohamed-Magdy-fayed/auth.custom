@@ -4,6 +4,7 @@ import {
 } from "@/auth/core/oauth/providers";
 import { SignUpForm } from "@/auth/nextjs/components/SignUpForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getT } from "@/lib/i18n/actions";
 
 export default async function SignUp({
 	searchParams,
@@ -14,6 +15,7 @@ export default async function SignUp({
 		inviteToken?: string;
 	}>;
 }) {
+	const { t } = await getT();
 	const { redirect, priceId, inviteToken } = await searchParams;
 	const providers = getConfiguredOAuthProviders().map((provider) => ({
 		provider,
@@ -24,7 +26,7 @@ export default async function SignUp({
 		<div className="container mx-auto p-4 max-w-[750px]">
 			<Card>
 				<CardHeader>
-					<CardTitle>Sign Up</CardTitle>
+					<CardTitle>{t("authTranslations.signUp.submit")}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<SignUpForm

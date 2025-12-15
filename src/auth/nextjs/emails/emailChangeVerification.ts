@@ -8,52 +8,25 @@ export async function sendEmailChangeVerification(options: {
 	currentEmail: string;
 }) {
 	const { t } = await getT();
-	const tr = (key: string, fallback: string, args?: Record<string, unknown>) => {
-		const value = t(key as any, args as any);
-		return value === key ? fallback : value;
-	};
-	const defaultRecipientName = tr(
-		"emails.common.defaultRecipientName",
-		"there",
-	);
+	const defaultRecipientName = t("authTranslations.emails.common.defaultRecipientName");
 	const displayName = options.name?.trim() || defaultRecipientName;
-	const subject = tr(
-		"emails.emailChangeVerification.subject",
-		"Confirm your new email address",
-	);
-	const text = tr(
-		"emails.emailChangeVerification.text",
-		"Hi {name},\n\nWe received a request to change the email on your Gateling account from {currentEmail} to {newEmail}. Confirm this change by visiting the link below:\n\n{verificationUrl}\n\nIf you didn't request this change, you can ignore this email and keep your current address.",
-		{
-			name: displayName,
-			currentEmail: options.currentEmail,
-			newEmail: options.to,
-			verificationUrl: options.verificationUrl,
-		},
-	);
-	const greetingHtml = tr("emails.common.greetingHtml", "Hi {name},", {
+	const subject = t("authTranslations.emails.emailChangeVerification.subject");
+	const text = t("authTranslations.emails.emailChangeVerification.text", {
+		name: displayName,
+		currentEmail: options.currentEmail,
+		newEmail: options.to,
+		verificationUrl: options.verificationUrl,
+	});
+	const greetingHtml = t("authTranslations.emails.common.greetingHtml", {
 		name: escapeHtml(displayName),
 	});
-	const introHtml = tr(
-		"emails.emailChangeVerification.html.intro",
-		"We received a request to change the email on your Gateling account from <strong>{currentEmail}</strong> to <strong>{newEmail}</strong>.",
-		{
-			currentEmail: escapeHtml(options.currentEmail),
-			newEmail: escapeHtml(options.to),
-		},
-	);
-	const buttonLabel = tr(
-		"emails.emailChangeVerification.ctaLabel",
-		"Confirm email change",
-	);
-	const ignoreNoticeHtml = tr(
-		"emails.emailChangeVerification.html.ignore",
-		"If you didn't request this change, you can ignore this email and continue using your current address.",
-	);
-	const signatureHtml = tr(
-		"emails.common.signatureHtml",
-		"Thanks,<br/>The Gateling Team",
-	);
+	const introHtml = t("authTranslations.emails.emailChangeVerification.html.intro", {
+		currentEmail: escapeHtml(options.currentEmail),
+		newEmail: escapeHtml(options.to),
+	});
+	const buttonLabel = t("authTranslations.emails.emailChangeVerification.ctaLabel");
+	const ignoreNoticeHtml = t("authTranslations.emails.emailChangeVerification.html.ignore");
+	const signatureHtml = t("authTranslations.emails.common.signatureHtml");
 	const html = `
 		<p>${greetingHtml}</p>
 		<p>${introHtml}</p>
@@ -65,7 +38,7 @@ export async function sendEmailChangeVerification(options: {
 		<p>${ignoreNoticeHtml}</p>
 		<p>${signatureHtml}</p>
 	`;
-	const fromName = tr("emails.common.fromName", "Gateling Auth");
+	const fromName = t("authTranslations.emails.common.fromName");
 
 	await sendMail({
 		toEmail: options.to,

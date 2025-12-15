@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { UsersTable } from "@/auth/tables";
+import { UsersTable } from "@/auth/tables/users-table";
 import { db } from "@/drizzle/db";
 import { getSessionFromCookie } from "../core/session";
 
@@ -67,11 +67,6 @@ function getUserFromDb(id: string) {
 			timezone: true,
 		},
 		where: eq(UsersTable.id, id),
-		with: {
-			roleAssignments: {
-				columns: {},
-				with: { role: { columns: { key: true, name: true } } },
-			},
-		},
+		with: {},
 	});
 }

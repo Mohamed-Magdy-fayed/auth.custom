@@ -7,45 +7,22 @@ export async function sendEmailVerificationEmail(options: {
 	verificationUrl: string;
 }) {
 	const { t } = await getT();
-	const tr = (key: string, fallback: string, args?: Record<string, unknown>) => {
-		const value = t(key as any, args as any);
-		return value === key ? fallback : value;
-	};
 	const expiryHours = "24";
-	const defaultRecipientName = tr(
-		"emails.common.defaultRecipientName",
-		"there",
-	);
+	const defaultRecipientName = t("authTranslations.emails.common.defaultRecipientName");
 	const displayName = options.name?.trim() || defaultRecipientName;
-	const subject = tr(
-		"emails.emailVerification.subject",
-		"Verify your email address",
-	);
-	const text = tr(
-		"emails.emailVerification.text",
-		"Hi {name},\n\nConfirm your email address by visiting the link below. The link expires in {expiryHours} hours.\n\n{verificationUrl}\n\nIf you did not create an account or request verification, you can ignore this message.",
-		{ name: displayName, expiryHours, verificationUrl: options.verificationUrl },
-	);
-	const greetingHtml = tr("emails.common.greetingHtml", "Hi {name},", {
+	const subject = t("authTranslations.emails.emailVerification.subject");
+	const text = t("authTranslations.emails.emailVerification.text", {
+		name: displayName,
+		expiryHours,
+		verificationUrl: options.verificationUrl,
+	});
+	const greetingHtml = t("authTranslations.emails.common.greetingHtml", {
 		name: escapeHtml(displayName),
 	});
-	const introHtml = tr(
-		"emails.emailVerification.html.intro",
-		"Confirm your email address by clicking the button below. The link expires in {expiryHours} hours.",
-		{ expiryHours },
-	);
-	const buttonLabel = tr(
-		"emails.emailVerification.ctaLabel",
-		"Verify email address",
-	);
-	const ignoreNoticeHtml = tr(
-		"emails.emailVerification.html.ignore",
-		"If you did not create an account or request verification, you can ignore this message.",
-	);
-	const signatureHtml = tr(
-		"emails.common.signatureHtml",
-		"Thanks,<br/>The Gateling Team",
-	);
+	const introHtml = t("authTranslations.emails.emailVerification.html.intro", { expiryHours });
+	const buttonLabel = t("authTranslations.emails.emailVerification.ctaLabel");
+	const ignoreNoticeHtml = t("authTranslations.emails.emailVerification.html.ignore");
+	const signatureHtml = t("authTranslations.emails.common.signatureHtml");
 	const html = `
 		<p>${greetingHtml}</p>
 		<p>${introHtml}</p>
@@ -57,7 +34,7 @@ export async function sendEmailVerificationEmail(options: {
 		<p>${ignoreNoticeHtml}</p>
 		<p>${signatureHtml}</p>
 	`;
-	const fromName = tr("emails.common.fromName", "Gateling Auth");
+	const fromName = t("authTranslations.emails.common.fromName");
 
 	await sendMail({
 		toEmail: options.to,

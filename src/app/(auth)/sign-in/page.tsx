@@ -10,6 +10,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { getT } from "@/lib/i18n/actions";
 
 export default async function SignIn({
 	searchParams,
@@ -20,6 +21,7 @@ export default async function SignIn({
 		priceId?: string;
 	}>;
 }) {
+	const { t } = await getT();
 	const { oauthError, redirect: redirectTarget, priceId } = await searchParams;
 	const providers = getConfiguredOAuthProviders().map((provider) => ({
 		provider,
@@ -30,7 +32,8 @@ export default async function SignIn({
 		<div className="container mx-auto p-4 max-w-[750px]">
 			<Card>
 				<CardHeader>
-					<CardTitle>Sign In</CardTitle>
+					<CardTitle>{t("authTranslations.signIn.title")}</CardTitle>
+					<CardDescription>{t("authTranslations.signIn.description")}</CardDescription>
 					{oauthError && (
 						<CardDescription className="text-destructive">
 							{oauthError}

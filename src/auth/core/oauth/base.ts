@@ -1,9 +1,8 @@
 import crypto from "crypto";
 import { z } from "zod";
-import { OAuthProvider } from "@/auth/tables";
+import { OAuthProvider } from "@/auth/tables/user-oauth-accounts-table";
 import { env } from "@/data/env/server";
 import { Cookies } from "../session";
-import { createAppleOAuthClient } from "./apple";
 import { createGithubOAuthClient } from "./github";
 import { createGoogleOAuthClient } from "./google";
 import { createMicrosoftOAuthClient } from "./microsoft";
@@ -165,8 +164,6 @@ export function getOAuthClient(provider: OAuthProvider) {
 			return createGithubOAuthClient();
 		case "microsoft":
 			return createMicrosoftOAuthClient();
-		case "apple":
-			return createAppleOAuthClient();
 		default:
 			throw new Error(`Unsupported provider: ${provider}`);
 	}

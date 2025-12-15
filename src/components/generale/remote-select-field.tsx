@@ -72,26 +72,16 @@ export function RemoteSelectField<TValue>({
 	initialOptions,
 }: RemoteSelectFieldProps<TValue>) {
 	const { t } = useTranslation();
-	const tr = React.useMemo(
-		() => (key: string, fallback: string, args?: Record<string, unknown>) => {
-			const value = t(key as any, args as any);
-			return value === key ? fallback : value;
-		},
-		[t],
-	);
-	const defaultErrorMessage = tr(
-		"remoteSelectField.error",
-		"Something went wrong while loading results.",
-	);
+	const defaultErrorMessage = t("remoteSelectField.error");
 	const defaultIdleMessage = React.useCallback(
 		(min: number) =>
-			tr("remoteSelectField.idle", "Type at least {count} characters to search", {
+			t("remoteSelectField.idle", {
 				count: String(min),
 			}),
-		[tr],
+		[t],
 	);
-	const defaultEmptyMessage = tr("remoteSelectField.empty", "No results found");
-	const defaultLoadingMessage = tr("remoteSelectField.loading", "Searching…");
+	const defaultEmptyMessage = t("remoteSelectField.empty");
+	const defaultLoadingMessage = t("remoteSelectField.loading");
 	const [open, setOpen] = React.useState(false);
 	const [query, setQuery] = React.useState("");
 	const [remoteOptions, setRemoteOptions] = React.useState<
@@ -278,7 +268,7 @@ export function RemoteSelectField<TValue>({
 					{selectedCount > 0 ? (
 						<div
 							role="button"
-							aria-label={tr("remoteSelectField.clear", "Clear selection")}
+							aria-label={t("remoteSelectField.clear")}
 							tabIndex={0}
 							onClick={handleReset}
 							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -304,7 +294,7 @@ export function RemoteSelectField<TValue>({
 							<div className="hidden items-center gap-1 lg:flex">
 								{selectedCount > 2 ? (
 									<Badge variant="secondary" className="rounded-sm px-1 font-normal">
-										{tr("remoteSelectField.selectedCount", "{count} selected", {
+										{t("remoteSelectField.selectedCount", {
 											count: String(selectedCount),
 										})}
 									</Badge>
@@ -388,7 +378,7 @@ export function RemoteSelectField<TValue>({
 										onSelect={() => handleReset()}
 										className="justify-center text-center"
 									>
-										{tr("remoteSelectField.clearSelection", "Clear selection")}
+										{t("remoteSelectField.clearSelection")}
 									</CommandItem>
 								</CommandGroup>
 							</>

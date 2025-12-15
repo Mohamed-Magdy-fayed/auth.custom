@@ -1,12 +1,13 @@
 "use client";
 
 import { TrashIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ActionButton } from "@/components/ui/action-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { deleteOrganization, setActiveOrganization } from "../org/actions";
+import { deleteOrganization, setActiveOrganization } from "../server/actions";
 
 type Organization = {
 	id: string;
@@ -23,6 +24,7 @@ export function OrganizationSwitcher({
 	organizations,
 }: OrganizationSwitcherProps) {
 	const { t } = useTranslation();
+	const router = useRouter();
 	const [status, setStatus] = useState<{
 		type: "success" | "error";
 		message: string;
@@ -31,27 +33,24 @@ export function OrganizationSwitcher({
 
 	if (organizations.length === 0) {
 		return (
-			<p className="text-sm text-muted-foreground">
-				{t("org.switcher.empty")}
-			</p>
+			<p className="text-sm text-muted-foreground">{t("authTranslations.org.switcher.empty")}</p>
 		);
 	}
 
-	const handleDelete = (organizationId: string) => {
-		startTransition(async () => {
-			setStatus(undefined);
+	const handleDelete = async (organizationId: string) => {
+		setStatus(undefined);
 
-			const result = await deleteOrganization(organizationId);
-
-			if (!result.success) {
-				if (result.message) {
-					setStatus({ type: "error", message: result.message });
-				}
-				return;
+		const result = await deleteOrganization(organizationId);
+		if (!result.success) {
+			if (result.message) {
+				setStatus({ type: "error", message: result.message });
 			}
+			return result;
+		}
 
-			setStatus({ type: "success", message: result.message });
-		});
+		setStatus({ type: "success", message: result.message });
+		router.refresh();
+		return result;
 	};
 
 	const handleSelect = (organizationId: string) => {
@@ -70,6 +69,8 @@ export function OrganizationSwitcher({
 			if (result.message) {
 				setStatus({ type: "success", message: result.message });
 			}
+
+			router.refresh();
 		});
 	};
 
@@ -82,6 +83,8 @@ export function OrganizationSwitcher({
 							? "text-sm text-emerald-600"
 							: "text-sm text-destructive"
 					}
+					role={status.type === "success" ? "status" : "alert"}
+					aria-live={status.type === "success" ? "polite" : "assertive"}
 				>
 					{status.message}
 				</p>
@@ -94,13 +97,11 @@ export function OrganizationSwitcher({
 					<div className="space-y-1">
 						<div className="flex items-center gap-2">
 							<span className="text-sm font-medium">{org.name}</span>
-							{org.isDefault && (
-								<Badge>{t("org.switcher.activeBadge")}</Badge>
-							)}
+							{org.isDefault && <Badge>{t("authTranslations.org.switcher.activeBadge")}</Badge>}
 							{!org.isDefault && org.status !== "active" && (
 								<Badge variant="outline">
 									{(() => {
-										const statusKey: `org.status.${Organization["status"]}` = `org.status.${org.status}`;
+										const statusKey: `authTranslations.org.status.${Organization["status"]}` = `authTranslations.org.status.${org.status}`;
 										const statusLabel = t(statusKey);
 										return statusLabel === statusKey ? org.status : statusLabel;
 									})()}
@@ -109,7 +110,7 @@ export function OrganizationSwitcher({
 							<ActionButton
 								size="icon-sm"
 								variant="ghost"
-								action={deleteOrganization.bind(null, org.id)}
+								action={() => handleDelete(org.id)}
 								requireAreYouSure
 							>
 								<TrashIcon />
@@ -119,7 +120,7 @@ export function OrganizationSwitcher({
 							<p className="text-xs text-muted-foreground">{org.description}</p>
 						)}
 						<p className="text-xs text-muted-foreground">
-							{t("org.switcher.slugLabel")} {org.slug}
+							{t("authTranslations.org.switcher.slugLabel")} {org.slug}
 						</p>
 					</div>
 					<Button
@@ -129,10 +130,10 @@ export function OrganizationSwitcher({
 						onClick={() => handleSelect(org.id)}
 					>
 						{org.isDefault
-							? t("org.switcher.current")
+							? t("authTranslations.org.switcher.current")
 							: isPending
-								? t("org.switcher.switching")
-								: t("org.switcher.setActive")}
+								? t("authTranslations.org.switcher.switching")
+								: t("authTranslations.org.switcher.setActive")}
 					</Button>
 				</div>
 			))}

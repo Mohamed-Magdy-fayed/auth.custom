@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import type { OAuthProvider } from "@/auth/tables";
+import type { OAuthProvider } from "@/auth/tables/user-oauth-accounts-table";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -84,14 +84,14 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 		const email = form.getValues("email");
 		if (!email) {
 			setError(
-				t("passkeys.auth.error.emailRequired"),
+				t("authTranslations.passkeys.auth.error.emailRequired"),
 			);
 			return;
 		}
 
 		if (typeof window === "undefined" || !window.PublicKeyCredential) {
 			setError(
-				t("passkeys.auth.error.unsupported"),
+				t("authTranslations.passkeys.auth.error.unsupported"),
 			);
 			return;
 		}
@@ -126,13 +126,13 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 				(caught.name === "NotAllowedError" || caught.name === "AbortError")
 			) {
 				setError(
-					t("passkeys.auth.error.cancelled"),
+					t("authTranslations.passkeys.auth.error.cancelled"),
 				);
 				return;
 			}
 
 			console.error("Passkey sign-in failed", caught);
-			setError(t("passkeys.auth.error.generic"));
+			setError(t("authTranslations.passkeys.auth.error.generic"));
 		} finally {
 			setIsPasskeyPending(false);
 		}
@@ -151,8 +151,16 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 					{...form.register("priceId")}
 					defaultValue={priceId ?? ""}
 				/>
-				{error && <p className="text-destructive">{error}</p>}
-				{oauthError && <p className="text-destructive">{oauthError}</p>}
+				{error && (
+					<p className="text-destructive" role="alert" aria-live="assertive">
+						{error}
+					</p>
+				)}
+				{oauthError && (
+					<p className="text-destructive" role="alert" aria-live="assertive">
+						{oauthError}
+					</p>
+				)}
 				{providers.length > 0 && (
 					<div className="flex flex-wrap gap-3">
 						{providers.map((option) => (
@@ -161,7 +169,7 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 								type="button"
 								onClick={async () => await handleOAuthClick(option.provider)}
 							>
-								{t("auth.oauth.providerButton", { provider: option.label })}
+								{t("authTranslations.oauth.providerButton", { provider: option.label })}
 							</Button>
 						))}
 					</div>
@@ -171,7 +179,7 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("auth.signIn.emailLabel")}</FormLabel>
+							<FormLabel>{t("authTranslations.signIn.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" {...field} />
 							</FormControl>
@@ -185,7 +193,7 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("auth.signIn.passwordLabel")}
+								{t("authTranslations.signIn.passwordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" {...field} />
@@ -202,22 +210,22 @@ export function SignInForm({ providers, redirect, priceId }: SignInFormProps) {
 						onClick={handlePasskeySignIn}
 					>
 						{isPasskeyPending
-							? t("passkeys.auth.pending")
-							: t("passkeys.auth.button")}
+							? t("authTranslations.passkeys.auth.pending")
+							: t("authTranslations.passkeys.auth.button")}
 					</Button>
 					<div className="flex gap-4">
 						<Button asChild variant="link">
 							<Link href="/forgot-password">
-								{t("auth.signIn.forgotPassword")}
+								{t("authTranslations.signIn.forgotPassword")}
 							</Link>
 						</Button>
 						<Button asChild variant="link">
 							<Link href={signUpHref}>
-								{t("auth.signIn.toSignUp")}
+								{t("authTranslations.signIn.toSignUp")}
 							</Link>
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{t("auth.signIn.submit")}
+							{t("authTranslations.signIn.submit")}
 						</Button>
 					</div>
 				</div>

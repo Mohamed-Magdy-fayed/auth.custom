@@ -1,4 +1,4 @@
-import authEn from "@/lib/i18n/auth/en";
+import authEn from "@/auth/config/translations/auth-en";
 import { dt, type LanguageMessages } from "../lib";
 
 export default {
@@ -196,5 +196,212 @@ export default {
 	users: "Users",
 	signOut: "Sign Out",
 	printSuccess: "Print successful!",
+	remoteSelectField: {
+		error: "Something went wrong while loading results.",
+		idle: "Type at least {count} characters to search",
+		empty: "No results found",
+		loading: "Searching…",
+		clear: "Clear selection",
+		selectedCount: "{count} selected",
+		clearSelection: "Clear selection",
+	},
+	dashboardPage: {
+		title: "Organization overview",
+		subtitle: "Monitor membership and invites for your workspace.",
+		metrics: {
+			activeMembers: "Active members",
+			pendingInvites: "Pending invites",
+			organizationCreated: "Organization created",
+		},
+		organization: {
+			activeBadge: "Active",
+			slugLine: "Slug {slug} • Created by workspace owner",
+			supportCta: "Support the project",
+			sessionsCta: "View active sessions",
+			description:
+				"Your organization is provisioned with cookie-based sessions and a simplified membership model. Invite teammates to collaborate across the app.",
+		},
+		switcher: {
+			title: "Switch workspace",
+			subtitle: "Select an active organization for your session.",
+		},
+		members: {
+			title: "Recent members",
+			subtitle: "Newest teammates with join dates.",
+			unknown: "Unknown member",
+			role: "Member",
+			joined: "Joined {date}",
+			empty:
+				"No active members yet. Use the avatar menu to invite teammates.",
+		},
+		invites: {
+			title: "Pending invites",
+			subtitle: "Invite links waiting for acceptance.",
+			invited: "Invited {date}",
+			form: {
+				label: "Invite to {organization}",
+				organizationFallback: "this workspace",
+				placeholder: "teammate@example.com",
+				submit: "Send invite",
+				submitting: "Sending...",
+				success: "Invitation sent to {email}",
+				invalidEmail: "Enter a valid email address.",
+				selfInvite: "You are already a member of this workspace.",
+				alreadyMember: "That user is already a member.",
+				alreadyPending: "An invitation is already pending for that email.",
+				noOrg: "Select an active organization before sending invites.",
+				missingOrigin: "Unable to build an invitation link. Check the app URL.",
+				genericError: "Unable to send invite right now.",
+			},
+			empty:
+				"Looks like everyone has joined. Send more invites from the workspace menu.",
+		},
+		activity: {
+			title: "Recent activity",
+			subtitle: "Key authentication events captured for this workspace.",
+			unknown: "Unknown user",
+			empty:
+				"No activity recorded yet. Actions like sign-ins, invites, and profile changes will appear here.",
+		},
+		plan: {
+			title: "Need to switch plans?",
+			subtitle:
+				"Visit the pricing page to explore other tiers. Changes take effect immediately after checkout.",
+			cta: "View pricing",
+		},
+	},
+	adminPage: {
+		title: "Admin",
+		subtitle: "Restricted area. Only admins can view this workspace dashboard.",
+		backCta: "Workspace home",
+	},
+	pricingPage: {
+		hero: {
+			badge: "Pricing built for community projects",
+			title: "Start free. Invite your team. Support the project when you are ready.",
+			subtitle:
+				"Gateling Auth ships with a generous free tier that unlocks the complete authentication experience. When you want to back continued development, upgrade to Plus and unlock priority support.",
+			primaryCta: "Create a free workspace",
+			secondaryCta: "Explore the docs",
+			demoNotice:
+				"No Stripe keys yet? No problem — we render safe demo plans until you add credentials. Your testers can still experience the full checkout flow end-to-end.",
+			supporterTitle: "Supporters welcome",
+			supporterBody:
+				"100% of Plus revenue funds new tutorials, components, and advanced integrations.",
+		},
+		plan: {
+			community: "Community",
+			communityDescription: "Everything you need to launch, always free.",
+			communityHighlight: "Free forever",
+			communityCta: "Sign up free",
+			base: "Base",
+			baseDescription: "Essential access while you configure real Stripe credentials.",
+			plus: "Plus",
+			plusDescription:
+				"Advanced collaboration and priority support for growing teams.",
+			supporterHighlight: "Supporter tier",
+			roadmapHighlight: "Fund the roadmap",
+		},
+		features: {
+			community: {
+				"0": "Unlimited organizations and members",
+				"1": "Email, passkeys, and OAuth sign-in",
+				"2": "Invite collaborators to shared workspaces",
+			},
+			base: {
+				"0": "Unlimited usage",
+				"1": "Unlimited workspace members",
+				"2": "Email support",
+			},
+			plus: {
+				"0": "Everything in Community",
+				"1": "Early access to new features",
+				"2": "Priority support in our private Slack",
+			},
+			default: {
+				"0": "Full access to the core feature set",
+				"1": "Invite unlimited team members",
+				"2": "Cancel or switch plans at any time",
+			},
+		},
+		value: {
+			title: "Everything stays unlocked on the free plan",
+			subtitle:
+				"Both plans ship with the same authentication capabilities. The Plus tier is purely a way to thank the maintainers and receive concierge support.",
+			bullets: {
+				"0": "Unlimited organizations and members",
+				"1": "Passkeys, OAuth, magic links, and passwords",
+				"2": "Simplified org memberships without roles/teams",
+				"3": "Production-ready email templates and queues",
+				"4": "Cookie-based sessions with quick rotation",
+				"5": "Stripe upgrade path for supporters",
+			},
+		},
+		cards: {
+			empty: {
+				title: "No plans available",
+				body: "Create products and recurring prices in Stripe, then refresh this page to display them here.",
+			},
+			disabled: {
+				contact: "Contact us",
+				demo: "Demo mode",
+			},
+			price: {
+				free: "Free",
+				freeSuffix: "for everything",
+				interval: dt("per {interval}", {}),
+				period: "billing period",
+				freeCopy: "Includes every feature, no credit card required.",
+				trialCopy: dt("Includes a {count}-day free trial. Cancel anytime.", {}),
+			},
+			signInPrompt: "Already using Gateling Auth?",
+			signInCta: "Sign in",
+			fallback: {
+				title: "Demo pricing preview",
+				notConfigured:
+					"Stripe credentials are not configured. Showing demo pricing instead.",
+				apiError:
+					"Stripe API requests failed. Showing demo pricing until the key is fixed.",
+				notConfiguredHint:
+					"Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in your environment, then restart the server to load live plans.",
+				apiErrorHint:
+					"Double-check your Stripe API key and network connectivity, then reload this page.",
+			},
+			cta: {
+				default: "Get Started",
+				pending: "Processing...",
+			},
+		},
+	},
+	marketing: {
+		brand: "Gateling Auth",
+		header: {
+			nav: {
+				features: "Features",
+				pricing: "Pricing",
+				docs: "Docs",
+			},
+			openWorkspace: "Open workspace",
+			goToDashboard: "Go to dashboard",
+			signIn: "Sign in",
+			getStarted: "Get started",
+		},
+		footer: {
+			tagline: "Production-ready authentication starter for modern SaaS teams.",
+			links: {
+				pricing: "Pricing",
+				features: "Features",
+				docs: "Documentation",
+				github: "GitHub",
+			},
+		},
+		docsSearch: {
+			label: "Search the docs",
+			placeholder: 'Try "passkeys" or "billing"',
+			empty:
+				'No documentation matched "{query}" yet. Try a different keyword or browse the categories above.',
+			tagSeparator: " / ",
+		},
+	},
 	...authEn,
 } as const satisfies LanguageMessages;

@@ -1,29 +1,21 @@
 "use server";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { OWNER_ROLE_KEY } from "@/auth/config/permissions";
+import { OrganizationMembershipsTable } from "@/auth/tables/organization-memberships-table";
+import { OrganizationsTable } from "@/auth/tables/organizations-table";
+import { UserCredentialsTable } from "@/auth/tables/user-credentials-table";
 import {
 	OAuthProvider,
-	OrganizationMembershipsTable,
-	OrganizationsTable,
 	oAuthProviderValues,
-	RolesTable,
-	TeamMembershipsTable,
-	TeamsTable,
-	UserCredentialsTable,
-	UserRoleAssignmentsTable,
-	UsersTable,
-} from "@/auth/tables";
+} from "@/auth/tables/user-oauth-accounts-table";
+import { UsersTable } from "@/auth/tables/users-table";
 import { db } from "@/drizzle/db";
+import { getT } from "@/lib/i18n/actions";
 import { slugify } from "@/lib/utils";
-import { getUserWithTeam, logActivity } from "@/saas/db/queries";
-import { createCheckoutSession } from "@/saas/payments/stripe";
-import { InvitationsTable } from "@/saas/tables";
-import { ActivityType } from "@/saas/tables/activity-logs-table";
-import { DEFAULT_ROLE_KEY } from "../core/constants";
+import { InvitationsTable } from "@/saas/tables/invitations-table";
 import { getOAuthClient } from "../core/oauth/base";
 import {
 	isOAuthProviderConfigured,
@@ -40,22 +32,6 @@ import {
 	removeSession,
 } from "../core/session";
 import { signInSchema, signUpSchema } from "./schemas";
-import { getT } from "@/lib/i18n/actions";
-
-type Translator = (
-	key: string,
-	fallback: string,
-	args?: Record<string, unknown>,
-) => string;
-
-async function getTranslator(): Promise<Translator> {
-	const { t } = await getT();
-
-	return (key, fallback, args) => {
-		const value = t(key as any, args as any);
-		return value === key ? fallback : value;
-	};
-}
 
 function normalizeEmail(email: string) {
 	return email.trim().toLowerCase();
@@ -83,40 +59,31 @@ async function generateUniqueOrganizationSlug(
 	return candidate;
 }
 
-async function generateUniqueTeamSlug(trx: DbTransaction, name: string) {
-	const base = slugify(name) || "team";
-	let candidate = base;
-	let suffix = 1;
-
-	while (
-		await trx.query.TeamsTable.findFirst({
-			columns: { id: true },
-			where: eq(TeamsTable.slug, candidate),
-		})
-	) {
-		candidate = `${base}-${suffix++}`;
-	}
-
-	return candidate;
-}
-
 export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
-	const tr = await getTranslator();
+	const { t } = await getT();
 	const { success, data } = signInSchema.safeParse(unsafeData);
 
-	if (!success)
-		return tr("auth.signIn.error.generic", "Unable to log you in");
+	if (!success) return t("authTranslations.signIn.error.generic");
 
 	const normalizedEmail = normalizeEmail(data.email);
 
-	const user = await db.query.UsersTable.findFirst({
+	type UserWithCredentials = Pick<
+		typeof UsersTable.$inferSelect,
+		"id" | "email" | "status"
+	> & {
+		credentials: Pick<
+			typeof UserCredentialsTable.$inferSelect,
+			"passwordHash" | "passwordSalt"
+		> | null;
+	};
+
+	const user = (await db.query.UsersTable.findFirst({
 		columns: { id: true, email: true, status: true },
 		where: eq(UsersTable.emailNormalized, normalizedEmail),
 		with: {
 			credentials: { columns: { passwordHash: true, passwordSalt: true } },
-			roleAssignments: { columns: {}, with: { role: { columns: { key: true } } } },
 		},
-	});
+	})) as UserWithCredentials | undefined;
 
 	if (
 		user == null ||
@@ -124,11 +91,11 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
 		user.credentials.passwordHash == null ||
 		user.credentials.passwordSalt == null
 	) {
-		return tr("auth.signIn.error.generic", "Unable to log you in");
+		return t("authTranslations.signIn.error.generic");
 	}
 
 	if (user.status !== "active") {
-		return tr("auth.signIn.error.inactive", "Account is not active");
+		return t("authTranslations.signIn.error.inactive");
 	}
 
 	const isCorrectPassword = await comparePasswords({
@@ -137,31 +104,11 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
 		salt: user.credentials.passwordSalt,
 	});
 
-	if (!isCorrectPassword)
-		return tr("auth.signIn.error.generic", "Unable to log you in");
-
-	const primaryRole =
-		user.roleAssignments?.find((assignment) => assignment.role != null)?.role
-			?.key ?? DEFAULT_ROLE_KEY;
+	if (!isCorrectPassword) return t("authTranslations.signIn.error.generic");
 
 	const sessionCookies = await cookies();
 
-	await createSession({ id: user.id, role: primaryRole }, sessionCookies);
-
-	const teamContext = await getUserWithTeam(user.id);
-	await logActivity(
-		teamContext?.teamId ?? null,
-		user.id,
-		ActivityType.SIGN_IN,
-	);
-
-	if (data.redirect === "checkout" && data.priceId) {
-		await createCheckoutSession({
-			team: teamContext?.team ?? null,
-			priceId: data.priceId,
-		});
-		return;
-	}
+	await createSession({ id: user.id }, sessionCookies);
 
 	if (data.redirect && data.redirect !== "checkout") {
 		redirect(data.redirect);
@@ -171,34 +118,25 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
 }
 
 export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
-	const tr = await getTranslator();
+	const { t } = await getT();
 	const result = signUpSchema.safeParse(unsafeData);
 
 	if (!result.success) {
 		console.warn("signUp validation failed", result.error.flatten());
-		return (
-			result.error.issues[0]?.message ??
-			tr("auth.signUp.error.generic", "Unable to create account")
-		);
+		return result.error.issues[0]?.message ?? t("authTranslations.signUp.error.generic");
 	}
 
 	const data = result.data;
 	const normalizedEmail = normalizeEmail(data.email);
-	const duplicateMessage = tr(
-		"auth.signUp.error.duplicate",
-		"Account already exists for this email",
-	);
-	const invalidInvitationMessage = tr(
-		"auth.signUp.error.invalidInvite",
-		"Invalid or expired invitation",
-	);
+	const duplicateMessage = t("authTranslations.signUp.error.duplicate");
+	const invalidInvitationMessage = t("authTranslations.signUp.error.invalidInvite");
 
 	const sessionCookies = await cookies();
 	const now = new Date();
 
 	type SignUpProvisionResult = {
-		sessionUser: { id: string; role: string };
-		team: typeof TeamsTable.$inferSelect | null;
+		sessionUser: { id: string };
+		organization: typeof OrganizationsTable.$inferSelect;
 		acceptedInvitation: boolean;
 	};
 
@@ -235,37 +173,6 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 					.insert(UserCredentialsTable)
 					.values({ userId: createdUser.id, passwordHash, passwordSalt: salt });
 
-				let defaultRole = await trx.query.RolesTable.findFirst({
-					columns: { id: true },
-					where: and(
-						eq(RolesTable.key, DEFAULT_ROLE_KEY),
-						isNull(RolesTable.organizationId),
-					),
-				});
-
-				if (!defaultRole) {
-					[defaultRole] = await trx
-						.insert(RolesTable)
-						.values({
-							key: DEFAULT_ROLE_KEY,
-							name: "User",
-							description: "Default system role",
-						})
-						.returning({ id: RolesTable.id });
-				}
-
-				if (!defaultRole) {
-					throw new Error("Failed to ensure default role");
-				}
-
-				await trx
-					.insert(UserRoleAssignmentsTable)
-					.values({
-						userId: createdUser.id,
-						roleId: defaultRole.id,
-						assignedById: createdUser.id,
-					});
-
 				if (data.inviteToken) {
 					const invitation = await trx.query.InvitationsTable.findFirst({
 						where: eq(InvitationsTable.token, data.inviteToken),
@@ -279,19 +186,12 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 						throw new Error(invalidInvitationMessage);
 					}
 
-					const team = await trx.query.TeamsTable.findFirst({
-						where: eq(TeamsTable.id, invitation.teamId),
-					});
-
-					if (!team) {
-						throw new Error(invalidInvitationMessage);
-					}
-
 					const organizationMembershipValues = {
-						organizationId: team.organizationId,
+						organizationId: invitation.organizationId,
 						userId: createdUser.id,
 						status: "active" as const,
 						isDefault: true,
+						invitedByUserId: invitation.invitedByUserId ?? null,
 						joinedAt: now,
 					};
 
@@ -300,38 +200,22 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 						.values(organizationMembershipValues)
 						.onConflictDoNothing();
 
-					let roleId: string | null = null;
-					if (invitation.roleKey) {
-						const role = await trx.query.RolesTable.findFirst({
-							columns: { id: true },
-							where: and(
-								eq(RolesTable.organizationId, team.organizationId),
-								eq(RolesTable.key, invitation.roleKey),
-							),
-						});
-						roleId = role?.id ?? null;
-					}
-
-					await trx
-						.insert(TeamMembershipsTable)
-						.values({
-							teamId: team.id,
-							userId: createdUser.id,
-							roleId,
-							status: "active",
-							isManager: invitation.roleKey === OWNER_ROLE_KEY,
-							joinedAt: now,
-						})
-						.onConflictDoNothing();
-
 					await trx
 						.update(InvitationsTable)
 						.set({ status: "accepted", acceptedAt: now })
 						.where(eq(InvitationsTable.id, invitation.id));
 
+					const invitedOrg = await trx.query.OrganizationsTable.findFirst({
+						where: eq(OrganizationsTable.id, invitation.organizationId),
+					});
+
+					if (!invitedOrg) {
+						throw new Error("Organization not found for invitation");
+					}
+
 					return {
-						sessionUser: { id: createdUser.id, role: DEFAULT_ROLE_KEY },
-						team,
+						sessionUser: { id: createdUser.id },
+						organization: invitedOrg,
 						acceptedInvitation: true,
 					};
 				}
@@ -356,23 +240,6 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 					throw new Error("Failed to create organization");
 				}
 
-				const teamName = `${data.name}'s Team`;
-				const teamSlug = await generateUniqueTeamSlug(trx, teamName);
-
-				const [team] = await trx
-					.insert(TeamsTable)
-					.values({
-						organizationId: organization.id,
-						name: teamName,
-						slug: teamSlug,
-						description: null,
-					})
-					.returning();
-
-				if (!team) {
-					throw new Error("Failed to create team");
-				}
-
 				await trx
 					.insert(OrganizationMembershipsTable)
 					.values({
@@ -383,49 +250,15 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 						joinedAt: now,
 					});
 
-				await trx
-					.insert(TeamMembershipsTable)
-					.values({
-						teamId: team.id,
-						userId: createdUser.id,
-						status: "active",
-						isManager: true,
-						joinedAt: now,
-					});
-
 				return {
-					sessionUser: { id: createdUser.id, role: DEFAULT_ROLE_KEY },
-					team,
+					sessionUser: { id: createdUser.id },
+					organization,
 					acceptedInvitation: false,
 				};
 			},
 		);
 
 		await createSession(signUpResult.sessionUser, sessionCookies);
-
-		const teamId = signUpResult.team?.id ?? null;
-		if (teamId) {
-			await logActivity(
-				teamId,
-				signUpResult.sessionUser.id,
-				ActivityType.SIGN_UP,
-			);
-			await logActivity(
-				teamId,
-				signUpResult.sessionUser.id,
-				signUpResult.acceptedInvitation
-					? ActivityType.ACCEPT_INVITATION
-					: ActivityType.CREATE_TEAM,
-			);
-		}
-
-		if (data.redirect === "checkout" && data.priceId) {
-			await createCheckoutSession({
-				team: signUpResult.team,
-				priceId: data.priceId,
-			});
-			return;
-		}
 
 		redirect("/dashboard");
 	} catch (error: any) {
@@ -438,7 +271,7 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 		}
 
 		console.error(error);
-		return tr("auth.signUp.error.generic", "Unable to create account");
+		return t("authTranslations.signUp.error.generic");
 	}
 }
 
@@ -446,35 +279,23 @@ export async function logOut() {
 	const cookieStore = await cookies();
 	const session = await getSessionFromCookie(cookieStore);
 
-	if (session) {
-		const teamContext = await getUserWithTeam(session.id);
-		await logActivity(
-			teamContext?.teamId ?? null,
-			session.id,
-			ActivityType.SIGN_OUT,
-		);
-	}
-
-	await removeSession({
-		delete: (val) => cookieStore.delete(val),
-	});
+	await removeSession({ delete: (val) => cookieStore.delete(val) });
 
 	redirect("/sign-in");
 }
 
 export async function oAuthSignIn(provider: OAuthProvider) {
-	if (!oAuthProviderValues.includes(provider)) {
-		throw new Error("Unsupported OAuth provider");
-	}
+	const { t } = await getT();
 
-	const tr = await getTranslator();
+	if (!oAuthProviderValues.includes(provider)) {
+		return { error: t("authTranslations.oauth.error.connectFailed") };
+	}
 
 	if (!isOAuthProviderConfigured(provider)) {
 		return {
-			error: tr(
-				"auth.oauth.providerUnavailable",
-				`${providerDisplayNames[provider]} sign-in is not currently available.`,
-			),
+			error: t("authTranslations.oauth.providerUnavailable", {
+				provider: providerDisplayNames[provider],
+			}),
 		};
 	}
 

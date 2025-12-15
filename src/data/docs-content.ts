@@ -64,7 +64,7 @@ export const docsArticles: DocArticle[] = [
 		body: [
 			"Duplicate the src/auth folder into your project. It contains every server action, session helper, and UI shell the product uses.",
 			"Copy the provided src/middleware.ts to enforce auth on protected routes immediately.",
-			"Sync the drizzle schema by importing auth/tables/index.ts or running the included migrations before deploying.",
+			"Sync the drizzle schema by importing src/drizzle/schema.ts or running the included migrations before deploying.",
 		],
 		actions: [
 			{ label: "Jump to setup checklist", href: "/docs#developer-guide" },
@@ -93,7 +93,7 @@ export const docsArticles: DocArticle[] = [
 		tags: ["organizations", "teams", "rbac"],
 		body: [
 			"Each user can belong to multiple organizations. Switching context is instant via the avatar menu.",
-			"Roles and permissions are defined in auth/config/permissions.ts and hydrated into the organization_memberships_table.",
+			"Organizations and memberships are managed under src/auth/features/org.",
 			"Team owners can promote members, invite new teammates, and manage billing without admin intervention.",
 		],
 		actions: [{ label: "Invite a teammate", href: "/app" }],

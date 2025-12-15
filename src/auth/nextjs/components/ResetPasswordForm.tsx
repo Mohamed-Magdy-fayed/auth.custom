@@ -63,6 +63,8 @@ export function ResetPasswordForm({
 								? "text-sm text-emerald-600"
 								: "text-sm text-destructive"
 						}
+						role={status.status === "success" ? "status" : "alert"}
+						aria-live={status.status === "success" ? "polite" : "assertive"}
 					>
 						{status.message}
 					</p>
@@ -72,7 +74,7 @@ export function ResetPasswordForm({
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("passwordReset.emailLabel")}</FormLabel>
+							<FormLabel>{t("authTranslations.passwordReset.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -86,7 +88,7 @@ export function ResetPasswordForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("passwordReset.otpLabel")}
+								{t("authTranslations.passwordReset.otpLabel")}
 							</FormLabel>
 							<FormControl>
 								<InputOTP
@@ -103,7 +105,7 @@ export function ResetPasswordForm({
 								</InputOTP>
 							</FormControl>
 							<p className="text-xs text-muted-foreground">
-								{t("passwordReset.otpHelp")}
+								{t("authTranslations.passwordReset.otpHelp")}
 							</p>
 							<FormMessage />
 						</FormItem>
@@ -115,7 +117,7 @@ export function ResetPasswordForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("passwordReset.newPasswordLabel")}
+								{t("authTranslations.passwordReset.newPasswordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="new-password" {...field} />
@@ -127,13 +129,13 @@ export function ResetPasswordForm({
 				<div className="flex justify-between">
 					<Button asChild variant="link">
 						<Link href="/sign-in">
-							{t("passwordReset.backToSignIn")}
+							{t("authTranslations.passwordReset.backToSignIn")}
 						</Link>
 					</Button>
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? t("passwordReset.reset.submitting")
-							: t("passwordReset.reset.submit")}
+							? t("authTranslations.passwordReset.reset.submitting")
+							: t("authTranslations.passwordReset.reset.submit")}
 					</Button>
 				</div>
 			</form>

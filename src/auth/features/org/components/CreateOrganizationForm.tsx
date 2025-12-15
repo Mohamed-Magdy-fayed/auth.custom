@@ -16,11 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { createOrganization } from "../org/actions";
+import { createOrganization } from "../server/actions";
 import {
 	type CreateOrganizationInput,
 	createOrganizationSchema,
-} from "../org/schemas";
+} from "../server/schemas";
 
 type FormValues = CreateOrganizationInput & { description?: string };
 
@@ -94,11 +94,11 @@ export function CreateOrganizationForm() {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("org.create.nameLabel")}
+								{t("authTranslations.org.create.nameLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input
-									placeholder={t("org.create.namePlaceholder")}
+									placeholder={t("authTranslations.org.create.namePlaceholder")}
 									{...field}
 								/>
 							</FormControl>
@@ -112,11 +112,11 @@ export function CreateOrganizationForm() {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("org.create.descriptionLabel")}
+								{t("authTranslations.org.create.descriptionLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input
-									placeholder={t("org.create.descriptionPlaceholder")}
+									placeholder={t("authTranslations.org.create.descriptionPlaceholder")}
 									{...field}
 								/>
 							</FormControl>
@@ -128,9 +128,9 @@ export function CreateOrganizationForm() {
 					<Button type="submit" disabled={isPending}>
 						<LoadingSwap
 							isLoading={isPending}
-							text={t("org.create.submitting")}
+							text={t("authTranslations.org.create.submitting")}
 						>
-							{t("org.create.submit")}
+							{t("authTranslations.org.create.submit")}
 						</LoadingSwap>
 					</Button>
 				</div>

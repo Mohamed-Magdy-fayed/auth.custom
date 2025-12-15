@@ -94,7 +94,7 @@ export const config = {
 									4. Run the database sync
 								</p>
 								<p>
-									Import <InlineCode>auth/tables/index.ts</InlineCode> into your Drizzle
+									Import <InlineCode>src/drizzle/schema.ts</InlineCode> into your Drizzle
 									schema or execute the generated migrations so the sessions, tokens, and
 									organization tables exist.
 								</p>

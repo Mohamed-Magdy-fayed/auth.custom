@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -58,6 +58,8 @@ export function ForgotPasswordForm() {
 								? "text-sm text-emerald-600"
 								: "text-sm text-destructive"
 						}
+						role={status.status === "success" ? "status" : "alert"}
+						aria-live={status.status === "success" ? "polite" : "assertive"}
 					>
 						{status.message}
 					</p>
@@ -67,7 +69,7 @@ export function ForgotPasswordForm() {
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("passwordReset.emailLabel")}</FormLabel>
+							<FormLabel>{t("authTranslations.passwordReset.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -81,8 +83,8 @@ export function ForgotPasswordForm() {
 					disabled={form.formState.isSubmitting}
 				>
 					{form.formState.isSubmitting
-						? t("passwordReset.submitting")
-						: t("passwordReset.submit")}
+						? t("authTranslations.passwordReset.submitting")
+						: t("authTranslations.passwordReset.submit")}
 				</Button>
 			</form>
 		</Form>

@@ -48,10 +48,10 @@ export function LogOutButton({
 		>
 			<LoadingSwap
 				isLoading={isLoading}
-				text={t("auth.loggingOut")}
+				text={t("authTranslations.loggingOut")}
 				className="flex items-center justify-center gap-2"
 			>
-				{children ?? t("auth.logOut")}
+				{children ?? t("authTranslations.logOut")}
 			</LoadingSwap>
 		</Button>
 	);

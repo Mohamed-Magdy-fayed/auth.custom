@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import type { DocArticle } from "@/data/docs-content";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 function normalize(value: string) {
 	return value.toLowerCase();
@@ -13,6 +14,7 @@ function normalize(value: string) {
 type DocsSearchProps = { topics: DocArticle[] };
 
 export function DocsSearch({ topics }: DocsSearchProps) {
+	const { t, dir, locale } = useTranslation();
 	const [query, setQuery] = useState("");
 
 	const results = useMemo(() => {
@@ -34,15 +36,15 @@ export function DocsSearch({ topics }: DocsSearchProps) {
 	}, [query, topics]);
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6" dir={dir} lang={locale}>
 			<div className="rounded-xl border bg-card p-6 shadow-sm">
 				<label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
-					Search the docs
+					{t("marketing.docsSearch.label")}
 					<Input
 						type="search"
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
-						placeholder='Try "passkeys" or "billing"'
+						placeholder={t("marketing.docsSearch.placeholder")}
 						className="h-11"
 					/>
 				</label>
@@ -55,7 +57,7 @@ export function DocsSearch({ topics }: DocsSearchProps) {
 					>
 						<div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
 							<Badge variant="outline">{topic.category}</Badge>
-							<span>{topic.tags.join(" / ")}</span>
+							<span>{topic.tags.join(t("marketing.docsSearch.tagSeparator"))}</span>
 						</div>
 						<h3 className="mt-3 text-xl font-semibold text-foreground">
 							{topic.title}
@@ -85,8 +87,7 @@ export function DocsSearch({ topics }: DocsSearchProps) {
 				))}
 				{results.length === 0 && (
 					<div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-						No documentation matched "{query}" yet. Try a different keyword or browse
-						the categories above.
+						{t("marketing.docsSearch.empty", { query })}
 					</div>
 				)}
 			</div>

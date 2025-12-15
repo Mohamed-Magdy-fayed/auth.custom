@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getAuthenticatedUser, getTeamForUser } from "@/saas/db/queries";
+import {
+	getAuthenticatedUser,
+	getOrganizationForUser,
+} from "@/saas/db/queries";
 
 export type ActionState = {
 	error?: string;
@@ -52,18 +55,18 @@ export function validatedActionWithUser<S extends z.ZodTypeAny, T>(
 	};
 }
 
-type ActionWithTeamFunction<T> = (
+type ActionWithOrganizationFunction<T> = (
 	formData: FormData,
-	team: NonNullable<Awaited<ReturnType<typeof getTeamForUser>>>,
+	organization: NonNullable<Awaited<ReturnType<typeof getOrganizationForUser>>>,
 ) => Promise<T>;
 
-export function withTeam<T>(action: ActionWithTeamFunction<T>) {
+export function withOrganization<T>(action: ActionWithOrganizationFunction<T>) {
 	return async (formData: FormData): Promise<T> => {
-		const team = await getTeamForUser();
-		if (!team) {
+		const organization = await getOrganizationForUser();
+		if (!organization) {
 			redirect("/sign-in");
 		}
 
-		return action(formData, team);
+		return action(formData, organization);
 	};
 }

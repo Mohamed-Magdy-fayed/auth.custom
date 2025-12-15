@@ -1,30 +1,27 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { DEFAULT_ROLE_KEY } from "@/auth/core/constants";
 import { getOAuthClient } from "@/auth/core/oauth/base";
 import { createSession, getSessionFromCookie } from "@/auth/core/session";
+import { OrganizationMembershipsTable } from "@/auth/tables/organization-memberships-table";
+import { OrganizationsTable } from "@/auth/tables/organizations-table";
 import {
 	OAuthProvider,
-	OrganizationMembershipsTable,
-	OrganizationsTable,
 	oAuthProviderValues,
-	RolesTable,
-	TeamMembershipsTable,
-	TeamsTable,
 	UserOAuthAccountsTable,
-	UserRoleAssignmentsTable,
-	UsersTable,
-} from "@/auth/tables";
+} from "@/auth/tables/user-oauth-accounts-table";
+import { UsersTable } from "@/auth/tables/users-table";
 import { db } from "@/drizzle/db";
+import { getT } from "@/lib/i18n/actions";
 import { slugify } from "@/lib/utils";
 
 export async function GET(
 	request: NextRequest,
 	{ params }: { params: Promise<{ provider: string }> },
 ) {
+	const { t } = await getT();
 	const { provider: rawProvider } = await params;
 	const code = request.nextUrl.searchParams.get("code");
 	const state = request.nextUrl.searchParams.get("state");
@@ -33,7 +30,7 @@ export async function GET(
 	if (typeof code !== "string" || typeof state !== "string") {
 		redirect(
 			`/sign-in?oauthError=${encodeURIComponent(
-				"Failed to connect. Please try again.",
+				t("authTranslations.oauth.error.connectFailed"),
 			)}`,
 		);
 	}
@@ -44,11 +41,12 @@ export async function GET(
 	try {
 		const oAuthUser = await oAuthClient.fetchUser(code, state, cookieJar);
 
-		let user: { id: string; role: string } | null = null;
+		let user: { id: string } | null = null;
 
 		if (currentSession?.id) {
 			user = await connectUserToAccount(oAuthUser, provider, {
 				currentUserId: currentSession.id,
+				t,
 			});
 		} else {
 			const existingUser = await db.query.UserOAuthAccountsTable.findFirst({
@@ -57,15 +55,16 @@ export async function GET(
 
 			user = await connectUserToAccount(oAuthUser, provider, {
 				currentUserId: existingUser?.userId,
+				t,
 			});
 		}
 
-		await createSession({ id: user.id, role: user.role }, cookieJar);
+		await createSession({ id: user.id }, cookieJar);
 	} catch (error: any) {
 		console.error(error);
 		redirect(
 			`/sign-in?oauthError=${encodeURIComponent(
-				error.message || "Failed to connect. Please try again.",
+				t("authTranslations.oauth.error.connectFailed"),
 			)}`,
 		);
 	}
@@ -75,60 +74,31 @@ export async function GET(
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-async function ensureDefaultRole(trx: DbTransaction, key: string) {
-	let defaultRole = await trx.query.RolesTable.findFirst({
-		columns: { id: true, key: true },
-		where: and(eq(RolesTable.key, key), isNull(RolesTable.organizationId)),
-	});
-
-	if (defaultRole == null) {
-		[defaultRole] = await trx
-			.insert(RolesTable)
-			.values({ key, name: key === DEFAULT_ROLE_KEY ? "User" : key })
-			.returning({ id: RolesTable.id, key: RolesTable.key });
-	}
-
-	if (defaultRole == null) {
-		throw new Error("Failed to ensure default role");
-	}
-
-	return defaultRole;
-}
-
 function normalizeEmail(email: string) {
 	return email.trim().toLowerCase();
 }
 
-type ConnectOptions = { currentUserId?: string };
+type ConnectOptions = {
+	currentUserId?: string;
+	t: Awaited<ReturnType<typeof getT>>["t"];
+};
 
 function connectUserToAccount(
 	{ id, email, name }: { id: string; email: string; name: string },
 	provider: OAuthProvider,
-	options: ConnectOptions = {},
+	options: ConnectOptions,
 ) {
 	return db.transaction(async (trx) => {
 		const normalizedEmail = normalizeEmail(email);
 		const existingUser = options.currentUserId
 			? await trx.query.UsersTable.findFirst({
-					columns: { id: true, emailVerifiedAt: true },
-					where: eq(UsersTable.id, options.currentUserId),
-					with: {
-						roleAssignments: {
-							columns: {},
-							with: { role: { columns: { key: true } } },
-						},
-					},
-				})
+				columns: { id: true, emailVerifiedAt: true },
+				where: eq(UsersTable.id, options.currentUserId),
+			})
 			: await trx.query.UsersTable.findFirst({
-					columns: { id: true, emailVerifiedAt: true },
-					where: eq(UsersTable.emailNormalized, normalizedEmail),
-					with: {
-						roleAssignments: {
-							columns: {},
-							with: { role: { columns: { key: true } } },
-						},
-					},
-				});
+				columns: { id: true, emailVerifiedAt: true },
+				where: eq(UsersTable.emailNormalized, normalizedEmail),
+			});
 
 		let user = existingUser;
 
@@ -151,19 +121,9 @@ function connectUserToAccount(
 				throw new Error("Unable to create user from OAuth profile");
 			}
 
-			const defaultRole = await ensureDefaultRole(trx, DEFAULT_ROLE_KEY);
-
-			await trx
-				.insert(UserRoleAssignmentsTable)
-				.values({
-					userId: newUser.id,
-					roleId: defaultRole.id,
-					assignedById: newUser.id,
-				});
-
 			await ensureDefaultOrganization(trx, { userId: newUser.id, name });
 
-			user = { ...newUser, roleAssignments: [{ role: { key: defaultRole.key } }] };
+			user = newUser;
 		} else {
 			const existingAccount = await trx.query.UserOAuthAccountsTable.findFirst({
 				columns: { userId: true },
@@ -174,7 +134,7 @@ function connectUserToAccount(
 			});
 
 			if (existingAccount && existingAccount.userId !== user.id) {
-				throw new Error("This OAuth account is already linked to another user");
+				throw new Error(options.t("authTranslations.oauth.error.alreadyLinked"));
 			}
 
 			if (user.emailVerifiedAt == null) {
@@ -190,11 +150,7 @@ function connectUserToAccount(
 			.values({ provider, providerAccountId: id, userId: user.id })
 			.onConflictDoNothing();
 
-		const roleKey =
-			user.roleAssignments?.find((assignment) => assignment.role != null)?.role
-				?.key ?? DEFAULT_ROLE_KEY;
-
-		return { id: user.id, role: roleKey };
+		return { id: user.id };
 	});
 }
 
@@ -230,23 +186,6 @@ async function ensureDefaultOrganization(
 		throw new Error("Failed to create organization for OAuth signup");
 	}
 
-	const teamLabel = `${name || "New user"}'s Team`;
-	const teamSlug = await generateUniqueTeamSlug(trx, teamLabel);
-
-	const [team] = await trx
-		.insert(TeamsTable)
-		.values({
-			organizationId: organization.id,
-			name: teamLabel,
-			slug: teamSlug,
-			description: null,
-		})
-		.returning();
-
-	if (!team) {
-		throw new Error("Failed to create team for OAuth signup");
-	}
-
 	const now = new Date();
 
 	await trx
@@ -256,16 +195,6 @@ async function ensureDefaultOrganization(
 			userId,
 			status: "active",
 			isDefault: true,
-			joinedAt: now,
-		});
-
-	await trx
-		.insert(TeamMembershipsTable)
-		.values({
-			teamId: team.id,
-			userId,
-			status: "active",
-			isManager: true,
 			joinedAt: now,
 		});
 }
@@ -282,23 +211,6 @@ async function generateUniqueOrganizationSlug(
 		await trx.query.OrganizationsTable.findFirst({
 			columns: { id: true },
 			where: eq(OrganizationsTable.slug, candidate),
-		})
-	) {
-		candidate = `${base}-${suffix++}`;
-	}
-
-	return candidate;
-}
-
-async function generateUniqueTeamSlug(trx: DbTransaction, name: string) {
-	const base = slugify(name) || "team";
-	let candidate = base;
-	let suffix = 1;
-
-	while (
-		await trx.query.TeamsTable.findFirst({
-			columns: { id: true },
-			where: eq(TeamsTable.slug, candidate),
 		})
 	) {
 		candidate = `${base}-${suffix++}`;

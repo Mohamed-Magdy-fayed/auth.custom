@@ -94,7 +94,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>
-									{t("profile.password.currentLabel")}
+									{t("authTranslations.profile.password.currentLabel")}
 								</FormLabel>
 								<FormControl>
 									<Input type="password" autoComplete="current-password" {...field} />
@@ -110,7 +110,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("profile.password.newLabel")}
+								{t("authTranslations.profile.password.newLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="new-password" {...field} />
@@ -125,7 +125,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("profile.password.confirmLabel")}
+								{t("authTranslations.profile.password.confirmLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="new-password" {...field} />
@@ -136,7 +136,7 @@ export function ChangePasswordForm({ isCreate }: { isCreate?: boolean }) {
 				/>
 				<div className="flex justify-end">
 					<Button type="submit" disabled={isPending}>
-						{isPending ? t("profile.password.updating") : t("profile.password.submit")}
+						{isPending ? t("authTranslations.profile.password.updating") : t("authTranslations.profile.password.submit")}
 					</Button>
 				</div>
 			</form>

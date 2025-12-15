@@ -47,8 +47,8 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 				message:
 					result.message ??
 					(result.success
-						? t("profile.email.success.changeRequested")
-						: t("profile.email.error.generic")),
+						? t("authTranslations.profile.email.success.changeRequested")
+						: t("authTranslations.profile.email.error.generic")),
 			});
 
 			if (!result.success && result.fieldErrors) {
@@ -70,7 +70,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 		<Form {...form}>
 			<form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
 				<p className="text-sm text-muted-foreground">
-					{t("profile.email.current")} {currentEmail}
+					{t("authTranslations.profile.email.current")} {currentEmail}
 				</p>
 				{status && (
 					<p
@@ -86,7 +86,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 					name="newEmail"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("profile.email.newLabel")}</FormLabel>
+							<FormLabel>{t("authTranslations.profile.email.newLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -99,7 +99,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 					name="confirmEmail"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("profile.email.confirmLabel")}</FormLabel>
+							<FormLabel>{t("authTranslations.profile.email.confirmLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" autoComplete="email" {...field} />
 							</FormControl>
@@ -113,7 +113,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("profile.email.currentPasswordLabel")}
+								{t("authTranslations.profile.email.currentPasswordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" autoComplete="current-password" {...field} />
@@ -124,7 +124,7 @@ export function ChangeEmailForm({ currentEmail }: ChangeEmailFormProps) {
 				/>
 				<div className="flex justify-end">
 					<Button type="submit" disabled={isPending}>
-						{isPending ? t("profile.email.sending") : t("profile.email.submit")}
+						{isPending ? t("authTranslations.profile.email.sending") : t("authTranslations.profile.email.submit")}
 					</Button>
 				</div>
 			</form>

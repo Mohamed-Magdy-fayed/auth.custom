@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { OAuthConnectionControls } from "@/auth/nextjs/components/OAuthConnectionControls";
 import { listOAuthConnections } from "@/auth/nextjs/oauthActions";
-import type { OAuthProvider } from "@/auth/tables";
+import type { OAuthProvider } from "@/auth/tables/user-oauth-accounts-table";
 import {
 	DialogContent,
 	DialogDescription,
@@ -19,18 +19,6 @@ type Status = { type: "success" | "error"; message: string } | null;
 
 export function OAuthDialog() {
 	const { t } = useTranslation();
-	const tr = useMemo(
-		() =>
-			(
-				key: string,
-				fallback: string,
-				args?: Record<string, unknown>,
-			) => {
-				const value = t(key as any, args as any);
-				return value === key ? fallback : value;
-			},
-		[t],
-	);
 	const [connections, setConnections] = useState<ConnectionItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [status, setStatus] = useState<Status>(null);
@@ -43,17 +31,11 @@ export function OAuthDialog() {
 			setConnections(result);
 		} catch (error) {
 			console.error("Failed to load OAuth connections", error);
-			setStatus({
-				type: "error",
-				message: tr(
-					"oauth.connections.loadError",
-					"Unable to load OAuth connections.",
-				),
-			});
+			setStatus({ type: "error", message: t("authTranslations.oauth.connections.loadError") });
 		} finally {
 			setIsLoading(false);
 		}
-	}, [tr]);
+	}, [t]);
 
 	useEffect(() => {
 		void loadConnections();
@@ -63,13 +45,11 @@ export function OAuthDialog() {
 		(_provider: OAuthProvider, message?: string) => {
 			setStatus({
 				type: "success",
-				message:
-					message ??
-					tr("oauth.connections.disconnectSuccess", "Connection removed."),
+				message: message ?? t("authTranslations.oauth.connections.disconnectSuccess"),
 			});
 			void loadConnections();
 		},
-		[loadConnections, tr],
+		[loadConnections, t],
 	);
 
 	const handleError = useCallback((message: string) => {
@@ -79,10 +59,8 @@ export function OAuthDialog() {
 	return (
 		<DialogContent className="sm:max-w-3xl">
 			<DialogHeader>
-				<DialogTitle>Connected accounts</DialogTitle>
-				<DialogDescription>
-					Link or unlink OAuth providers you can use to access your account.
-				</DialogDescription>
+				<DialogTitle>{t("authTranslations.oauth.connections.title")}</DialogTitle>
+				<DialogDescription>{t("authTranslations.oauth.connections.description")}</DialogDescription>
 			</DialogHeader>
 			{status && (
 				<p
@@ -96,25 +74,18 @@ export function OAuthDialog() {
 				</p>
 			)}
 			{isLoading ? (
-				<Muted>Loading OAuth providers…</Muted>
+				<Muted>{t("authTranslations.oauth.connections.loading")}</Muted>
 			) : connections.length === 0 ? (
-				<Muted>
-					{tr(
-						"oauth.connections.empty",
-						"No OAuth providers are currently configured.",
-					)}
-				</Muted>
+				<Muted>{t("authTranslations.oauth.connections.empty")}</Muted>
 			) : (
 				<div className="space-y-3">
 					{connections.map((connection) => {
 						const connectedAt = formatDate(connection.connectedAt);
 						const statusCopy = connection.connected
 							? connectedAt
-								? tr("oauth.connections.connectedAt", "Connected {date}", {
-									date: connectedAt,
-								})
-								: tr("oauth.connections.connected", "Connected")
-							: tr("oauth.connections.notConnected", "Not connected");
+								? t("authTranslations.oauth.connections.connectedAt", { date: connectedAt })
+								: t("authTranslations.oauth.connections.connected")
+							: t("authTranslations.oauth.connections.notConnected");
 
 						return (
 							<div

@@ -16,42 +16,23 @@ export default async function VerifyEmailPage({
 	searchParams: Promise<{ token?: string }>;
 }) {
 	const { t } = await getT();
-	const tr = (
-		key: string,
-		fallback: string,
-		args?: Record<string, unknown>,
-	) => {
-		const value = t(key as any, args as any);
-		return value === key ? fallback : value;
-	};
 	const { token } = await searchParams;
 	const result = token
 		? await verifyEmailChange(token)
 		: {
 			status: "error" as const,
-			message: tr(
-				"emailVerification.error.invalidToken",
-				"Invalid email verification link.",
-			),
+			message: t("authTranslations.emailVerification.error.invalidToken"),
 		};
 
 	return (
 		<div className="container mx-auto p-4 max-w-[650px]">
 			<Card>
 				<CardHeader>
-					<CardTitle>
-						{tr("emailVerification.heading", "Email verification")}
-					</CardTitle>
+					<CardTitle>{t("authTranslations.emailVerification.heading")}</CardTitle>
 					<CardDescription>
 						{result.status === "success"
-							? tr(
-								"emailVerification.description.success",
-								"Your email address is now verified.",
-							)
-							: tr(
-								"emailVerification.description.error",
-								"We could not verify your email address.",
-							)}
+							? t("authTranslations.emailVerification.description.success")
+							: t("authTranslations.emailVerification.description.error")}
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
@@ -61,17 +42,17 @@ export default async function VerifyEmailPage({
 								? "text-sm text-emerald-600"
 								: "text-sm text-destructive"
 						}
+						role={result.status === "success" ? "status" : "alert"}
+						aria-live={result.status === "success" ? "polite" : "assertive"}
 					>
 						{result.message}
 					</p>
 					<div className="flex gap-3">
 						<Button asChild variant="outline">
-							<Link href="/">{tr("emailVerification.backHome", "Home")}</Link>
+							<Link href="/">{t("authTranslations.emailVerification.backHome")}</Link>
 						</Button>
 						<Button asChild>
-							<Link href="/sign-in">
-								{tr("emailVerification.backToSignIn", "Sign in")}
-							</Link>
+							<Link href="/sign-in">{t("authTranslations.emailVerification.backToSignIn")}</Link>
 						</Button>
 					</div>
 				</CardContent>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import type { OAuthProvider } from "@/auth/tables";
+import type { OAuthProvider } from "@/auth/tables/user-oauth-accounts-table";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -50,6 +50,8 @@ export function SignUpForm({
 		},
 	});
 
+	const { isSubmitting } = form.formState;
+
 	async function onSubmit(data: z.infer<typeof signUpSchema>) {
 		const error = await signUp(data);
 		setError(error);
@@ -87,8 +89,16 @@ export function SignUpForm({
 					{...form.register("inviteToken")}
 					defaultValue={inviteToken ?? ""}
 				/>
-				{error && <p className="text-destructive">{error}</p>}
-				{oauthError && <p className="text-destructive">{oauthError}</p>}
+				{error && (
+					<p className="text-destructive" role="alert" aria-live="assertive">
+						{error}
+					</p>
+				)}
+				{oauthError && (
+					<p className="text-destructive" role="alert" aria-live="assertive">
+						{oauthError}
+					</p>
+				)}
 				{providers.length > 0 && (
 					<div className="flex flex-wrap gap-3">
 						{providers.map((option) => (
@@ -97,7 +107,7 @@ export function SignUpForm({
 								type="button"
 								onClick={async () => await handleOAuthClick(option.provider)}
 							>
-								{t("auth.oauth.providerButton", { provider: option.label })}
+								{t("authTranslations.oauth.providerButton", { provider: option.label })}
 							</Button>
 						))}
 					</div>
@@ -107,7 +117,7 @@ export function SignUpForm({
 					name="name"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("auth.signUp.nameLabel")}</FormLabel>
+							<FormLabel>{t("authTranslations.signUp.nameLabel")}</FormLabel>
 							<FormControl>
 								<Input type="text" {...field} />
 							</FormControl>
@@ -120,7 +130,7 @@ export function SignUpForm({
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>{t("auth.signUp.emailLabel")}</FormLabel>
+							<FormLabel>{t("authTranslations.signUp.emailLabel")}</FormLabel>
 							<FormControl>
 								<Input type="email" {...field} />
 							</FormControl>
@@ -134,7 +144,7 @@ export function SignUpForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel>
-								{t("auth.signUp.passwordLabel")}
+								{t("authTranslations.signUp.passwordLabel")}
 							</FormLabel>
 							<FormControl>
 								<Input type="password" {...field} />
@@ -146,11 +156,13 @@ export function SignUpForm({
 				<div className="flex gap-4 justify-end">
 					<Button asChild variant="link">
 						<Link href={signInHref}>
-							{t("auth.signUp.toSignIn")}
+							{t("authTranslations.signUp.toSignIn")}
 						</Link>
 					</Button>
-					<Button type="submit">
-						{t("auth.signUp.submit")}
+					<Button type="submit" disabled={isSubmitting}>
+						{isSubmitting
+							? t("authTranslations.signUp.submitting")
+							: t("authTranslations.signUp.submit")}
 					</Button>
 				</div>
 			</form>

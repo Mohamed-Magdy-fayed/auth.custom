@@ -4,7 +4,7 @@ import { OAuthClient } from "./base";
 
 const githubEmailSchema = z
 	.object({
-		email: z.string().email(),
+		email: z.email(),
 		primary: z.boolean().optional(),
 		verified: z.boolean().optional(),
 	})
@@ -32,7 +32,7 @@ export function createGithubOAuthClient() {
 		userInfo: {
 			schema: z.object({
 				id: z.coerce.string(),
-				email: z.string().email().nullable().optional(),
+				email: z.email().nullable().optional(),
 				name: z.string().nullable().optional(),
 				login: z.string(),
 			}),

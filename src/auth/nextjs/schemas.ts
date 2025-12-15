@@ -9,7 +9,7 @@ export const signInSchema = z.object({
 
 export const signUpSchema = z.object({
 	name: z.string().min(1),
-	email: z.string().email(),
+	email: z.email(),
 	password: z.string().min(8),
 	inviteToken: z.string().optional(),
 	redirect: z.string().optional(),
